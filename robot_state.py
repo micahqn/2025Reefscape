@@ -1,4 +1,5 @@
 from ntcore import NetworkTableInstance
+from pathplannerlib.logging import PathPlannerLogging
 from phoenix6 import swerve
 from wpilib import DataLogManager, DriverStation, Field2d, SmartDashboard
 from wpimath.geometry import Pose2d
@@ -25,6 +26,8 @@ class RobotState:
         # Additional swerve info
         self._module_states = self._table.getStructArrayTopic("moduleStates", SwerveModuleState).publish()
         self._module_targets = self._table.getStructArrayTopic("moduleTargets", SwerveModuleState).publish()
+
+        PathPlannerLogging.setLogTargetPoseCallback(lambda pose: self._field.getObject("targetPose").setPose(pose))
 
     def log_swerve_state(self, state: swerve.SwerveDrivetrain.SwerveDriveState):
         """
