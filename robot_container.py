@@ -5,7 +5,6 @@ from commands2.button import CommandXboxController
 from pathplannerlib.auto import AutoBuilder
 from phoenix6 import SignalLogger
 from wpilib import SmartDashboard
-from wpimath.units import rotationsToRadians
 
 from generated.tuner_constants import TunerConstants
 from robot_state import RobotState
@@ -16,21 +15,11 @@ from subsystems.swerve import SwerveSubsystem
 class RobotContainer:
 
     def __init__(self) -> None:
-        self._max_speed = (
-            TunerConstants.speed_at_12_volts
-        )  # speed_at_12_volts desired top speed
-        self._max_angular_rate = rotationsToRadians(
-            1
-        )  # 3/4 of a rotation per second max angular velocity
-
         self._driver_controller = commands2.button.CommandXboxController(0)
 
         self.drivetrain = TunerConstants.create_drivetrain(controller=self._driver_controller)
         self.superstructure = Superstructure(self.drivetrain)
         self._robot_state = RobotState(self.drivetrain)
-
-        # Setting up bindings for necessary control of the swerve drive platform
-
 
         # Path follower
         self._auto_chooser = AutoBuilder.buildAutoChooser("Auto Chooser")
