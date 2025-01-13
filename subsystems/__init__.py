@@ -36,7 +36,6 @@ class StateSubsystem(Subsystem, ABC, metaclass=StateSubsystemMeta):
         self._current_state_pub = self._network_table.getStringTopic("Current State").publish()
 
         self._sim_models: list[tuple[DCMotorSim, TalonFX]] = []
-        self._talons: set[tuple[TalonFX, str]] = set()
 
     def set_desired_state(self, desired_state: SubsystemState) -> None: # type: ignore
         """Override this method to handle desired state handling for
@@ -86,7 +85,6 @@ class StateSubsystem(Subsystem, ABC, metaclass=StateSubsystemMeta):
         defaults to 0.001
         :type moi: float, optional
         """
-        self._talons.add(talon)
         self._sim_models.append(
             (DCMotorSim(
                 LinearSystemId.DCMotorSystem(
