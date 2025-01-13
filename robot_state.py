@@ -4,11 +4,13 @@ from phoenix6 import swerve
 from wpilib import DataLogManager, DriverStation, Field2d, SmartDashboard
 from wpimath.geometry import Pose2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
+from wpiutil import Sendable
 
 from subsystems.swerve import SwerveSubsystem
 
 
 class RobotState:
+
     def __init__(self, drivetrain: SwerveSubsystem):
         self.swerve = drivetrain
 
@@ -26,6 +28,25 @@ class RobotState:
         # Additional swerve info
         self._module_states = self._table.getStructArrayTopic("moduleStates", SwerveModuleState).publish()
         self._module_targets = self._table.getStructArrayTopic("moduleTargets", SwerveModuleState).publish()
+
+        class SendableSwerveDrive(Sendable):
+            def __init__(self):
+                super().__init__()
+
+            def initSendable(self, builder):
+                state = drivetrain.get_state()
+                builder.setSmartDashboardType("SwerveDrive")
+                builder.addDoubleProperty("Front Left Angle", lambda: state.module_states[0].angle.radians(), lambda _: None)
+                builder.addDoubleProperty("Front Left Velocity", lambda: state.module_states[0].speed, lambda _: None)
+                builder.addDoubleProperty("Front Right Angle", lambda: state.module_states[1].angle.radians(), lambda _: None)
+                builder.addDoubleProperty("Front Right Velocity", lambda: state.module_states[1].speed, lambda _: None)
+                builder.addDoubleProperty("Back Left Angle", lambda: state.module_states[2].angle.radians(), lambda _: None)
+                builder.addDoubleProperty("Back Left Velocity", lambda: state.module_states[2].speed, lambda _: None)
+                builder.addDoubleProperty("Back Right Angle", lambda: state.module_states[3].angle.radians(), lambda _: None)
+                builder.addDoubleProperty("Back Right Velocity", lambda: state.module_states[3].speed, lambda _: None)
+                builder.addDoubleProperty("Robot Angle", lambda: state.pose.rotation().radians(), lambda _: None)
+
+        SmartDashboard.putData("Swerve Drive", SendableSwerveDrive())
 
         PathPlannerLogging.setLogTargetPoseCallback(lambda pose: self._field.getObject("targetPose").setPose(pose))
 
