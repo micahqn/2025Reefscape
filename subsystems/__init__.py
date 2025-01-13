@@ -1,15 +1,16 @@
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, ABCMeta
 from enum import Enum
 
 from commands2 import Command, InstantCommand
 from commands2.subsystem import Subsystem
 from ntcore import *
-from phoenix6.hardware import TalonFX
 from phoenix6 import utils
+from phoenix6.hardware import TalonFX
 from wpilib import RobotController
 from wpilib.simulation import DCMotorSim
 from wpimath import units
 from wpimath.system.plant import DCMotor, LinearSystemId
+
 
 class StateSubsystemMeta(ABCMeta, type(Subsystem)):
     pass
@@ -41,6 +42,8 @@ class StateSubsystem(Subsystem, ABC, metaclass=StateSubsystemMeta):
         """Override this method to handle desired state handling for
         your subsystem!
         """
+        if self._subsystem_state is desired_state:
+            return
         self._subsystem_state = desired_state
 
     def periodic(self):
