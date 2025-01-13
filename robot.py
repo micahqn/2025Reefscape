@@ -1,3 +1,4 @@
+import os.path
 from importlib import metadata
 
 from commands2 import CommandScheduler, TimedCommandRobot
@@ -22,10 +23,16 @@ class OilSpill(TimedCommandRobot):
             DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
 
+        elasticlib.start_elastic_server()
+
         DataLogManager.log("Robot initialized")
 
-    def get_robot_container(self) -> RobotContainer:
-        return self.container
+    @staticmethod
+    def get_deploy_directory():
+        if os.path.exists("/home/lvuser"):
+            return "/home/lvuser/deploy"
+        else:
+            return os.path.join(os.getcwd(), "deploy")
 
     # Most of these are all here to suppress warnings
     def robotPeriodic(self) -> None:
