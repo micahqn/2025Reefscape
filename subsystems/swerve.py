@@ -1,6 +1,7 @@
 import math
 from abc import ABC
 from enum import auto, Enum
+from importlib import metadata
 from typing import Callable, overload
 
 import commands2.button
@@ -8,13 +9,17 @@ from commands2 import Command, Subsystem, cmd
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder, RobotConfig
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
+from pathplannerlib.util import DriveFeedforwards
+from pathplannerlib.util.swerve import SwerveSetpointGenerator, SwerveSetpoint
 from phoenix6 import swerve, units, utils
 from phoenix6.swerve.requests import ApplyRobotSpeeds
 from phoenix6.swerve.swerve_drivetrain import DriveMotorT, SteerMotorT, EncoderT
-from wpilib import DriverStation, Notifier, RobotController
+from wpilib import DriverStation, Notifier, RobotController, DataLogManager
 from wpimath.geometry import Rotation2d
+from wpimath.kinematics import ChassisSpeeds
 from wpimath.units import rotationsToRadians
 
+import robot
 from limelight import LimelightHelpers
 from subsystems import StateSubsystem
 
@@ -41,6 +46,8 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
     """Blue alliance sees forward as 0 degrees (toward red alliance wall)"""
     _RED_ALLIANCE_PERSPECTIVE_ROTATION = Rotation2d.fromDegrees(180)
     """Red alliance sees forward as 180 degrees (toward blue alliance wall)"""
+
+    _MAX_STEERING_VELOCITY: units.radians_per_second = rotationsToRadians(15)
 
     @overload
     def __init__(
@@ -273,6 +280,11 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
 
         if utils.is_simulation():
             self._start_sim_thread()
+
+        if robot.has_outdated_pathplanner():
+            DataLogManager.log(f"WARN: robotpy-pathplannerlib is version {metadata.version("robotpy-pathplannerlib")}. "
+                               "PathPlanner must be greater than 2025.2.1 in order to use SetpointGenerator, defaulting"
+                               " to standard control.")
         self._configure_auto_builder()
 
     def _configure_auto_builder(self) -> None:
@@ -283,10 +295,7 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
             lambda: self.get_state().speeds,  # Supplier of current robot speeds
             # Consumer of ChassisSpeeds and feedforwards to drive the robot
             lambda speeds, feedforwards: self.set_control(
-                self._apply_robot_speeds
-                .with_speeds(speeds)
-                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
-                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
+                self._apply_robot_speeds_from_setpoint(speeds, feedforwards)
             ),
             PPHolonomicDriveController(
                 # PID constants for translation
@@ -298,6 +307,32 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
             # Assume the path needs to be flipped for Red vs Blue, this is normally the case
             lambda: (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
             self  # Subsystem for requirements
+        )
+
+        self._setpoint_generator = SwerveSetpointGenerator(config, self._MAX_STEERING_VELOCITY)
+
+        state = self.get_state()
+        self._prev_setpoint = SwerveSetpoint(state.speeds, state.module_states, DriveFeedforwards.zeros(config.numModules))
+
+    def _apply_robot_speeds_from_setpoint(self, speeds: ChassisSpeeds, feedforwards: DriveFeedforwards) -> ApplyRobotSpeeds:
+        if robot.has_outdated_pathplanner():
+            # https://github.com/mjansen4857/pathplanner/pull/999
+            return (self._apply_robot_speeds
+                .with_speeds(speeds)
+                .with_wheel_force_feedforwards_x(feedforwards.robotRelativeForcesXNewtons)
+                .with_wheel_force_feedforwards_y(feedforwards.robotRelativeForcesYNewtons)
+            )
+
+        self._prev_setpoint = self._setpoint_generator.generateSetpoint(
+            self._prev_setpoint,
+            speeds,
+            0.02
+        )
+
+        return (self._apply_robot_speeds
+            .with_speeds(self._prev_setpoint.robot_relative_speeds)
+            .with_wheel_force_feedforwards_x(self._prev_setpoint.feedforwards.robotRelativeForcesXNewtons)
+            .with_wheel_force_feedforwards_y(self._prev_setpoint.feedforwards.robotRelativeForcesYNewtons)
         )
 
     def apply_request(
@@ -380,7 +415,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
                 self.sys_id_quasistatic(SysIdRoutine.Direction.kForward).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
             case self.SubsystemState.SYS_ID_QUASI_REVERSE:
                 self.sys_id_quasistatic(SysIdRoutine.Direction.kReverse).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
-
 
     def set_desired_state(self, desired_state: SubsystemState) -> None:
         if desired_state is self._subsystem_state:
