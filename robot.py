@@ -9,9 +9,8 @@ class OilSpill(TimedCommandRobot):
     def __init__(self, period = 0.02) -> None:
         super().__init__(period)
 
-        self.container = RobotContainer()
-
         DriverStation.silenceJoystickConnectionWarning(not DriverStation.isFMSAttached())
+        self.container = RobotContainer()
 
         if RobotBase.isReal():
             DataLogManager.start("/home/lvuser/logs")
@@ -20,6 +19,9 @@ class OilSpill(TimedCommandRobot):
         DriverStation.startDataLog(DataLogManager.getLog())
 
         DataLogManager.log("Robot initialized")
+
+    def get_robot_container(self) -> RobotContainer:
+        return self.container
 
     # Most of these are all here to suppress warnings
     def robotPeriodic(self) -> None:
