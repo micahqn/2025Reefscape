@@ -54,6 +54,7 @@ class RobotState:
         SmartDashboard.putData("Swerve Drive", SendableSwerveDrive())
 
         PathPlannerLogging.setLogTargetPoseCallback(lambda pose: self._field.getObject("targetPose").setPose(pose))
+        PathPlannerLogging.setLogActivePathCallback(lambda poses: self._field.getObject("activePath").setPoses(poses[::3]))
 
     def log_swerve_state(self, state: swerve.SwerveDrivetrain.SwerveDriveState):
         """
