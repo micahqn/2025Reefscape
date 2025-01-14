@@ -11,5 +11,6 @@ robotpy_extras = [
 
 # Other pip packages to install
 requires = [
-    "robotpy-pathplannerlib==2025.2.1"
+    "robotpy-pathplannerlib==2025.2.1",
+    "packaging"
 ]
