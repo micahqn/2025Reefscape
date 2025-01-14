@@ -183,7 +183,7 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
                 .velocity(self.modules[0].drive_motor.get_velocity().value)
                 .position(self.modules[0].drive_motor.get_position().value),
                 self,
-                ),
+                )
         )
         """SysId routine for characterizing translation. This is used to find PID gains for the drive motors."""
 
@@ -202,7 +202,7 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
                 .velocity(self.modules[0].steer_motor.get_velocity().value)
                 .position(self.modules[0].steer_motor.get_position().value),
                 self,
-                ),
+                )
         )
         """SysId routine for characterizing steer. This is used to find PID gains for the steer motors."""
 
