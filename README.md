@@ -6,7 +6,7 @@ This year, we have a swerve drive, and a climber arm to climb the deep cage, as 
 
 ## Superstructure
 
-We are using a simultaneously similar but very different framework from most teams this year. Instead of multiple subsystems being linked together in a robot container file, we have a central superstructure that handles all subsystems' states.
+We are using a simultaneously similar but very different framework from most teams this year. Instead of multiple subsystems being linked together in a robot container file, we have a central superstructure that handles all subsystems' states. Instead of controlling individual subsystems, the controller determines the state of the superstructure as a whole. We also have a robot state class that keeps track of odometry measurements and robot pose estimations for use in the rest of our robot.
 
 ## Swerve Drive
 
@@ -30,4 +30,4 @@ The intake intakes coral. A motor on the intake rotates wheels that pick up the 
 
 ## Autonomous Path Finding
 
-This year, we recognized the importance of autonomous routines to help simplify driver tasks due to lack of visibility on the field. We use PathPlanner's AutoBuilder to create paths on-the-fly that drive the robot from wherever it is on the field to the beginning of a path which we already pre-planned in the PathPlanner application. Robot localization for this is done via two measurements: The odometry we have on our swerve drivetrain, and the MegaTag2 localizer on our Limelight.
+This year, we recognized the importance of autonomous routines to help simplify driver tasks due to lack of visibility on the field. We use PathPlanner's AutoBuilder to create paths on-the-fly that drive the robot from wherever it is on the field to the beginning of a path which we already pre-planned in the PathPlanner application. Robot localization for this is done via two measurements from our robot state class: The odometry we have on our swerve drivetrain, and the MegaTag2 localizer on our Limelight.
