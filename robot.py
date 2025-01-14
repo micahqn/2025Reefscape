@@ -30,9 +30,6 @@ class OilSpill(TimedCommandRobot):
             elasticlib.start_elastic_server("10.63.43.2")
             elasticlib.start_elastic_server("10.0.1.200")
 
-        elasticlib.start_elastic_server("10.63.43.2")
-        elasticlib.start_elastic_server("10.0.1.200")
-
         DataLogManager.log("Robot initialized")
 
     @staticmethod
