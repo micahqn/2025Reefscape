@@ -51,7 +51,7 @@ def start_elastic_server() -> None:
                         self.end_headers()
                         self.wfile.write(f"Error: {str(exc)}".encode('utf-8'))
                         DataLogManager.log(f"Error serving layout: {exc}")
-                else:
+                elif self.path.endswith("layout.json"):
                     # Handle requests for specific layout files like /elastic-layout.json
                     layout_name = self.path.lstrip("/")  # Remove the leading '/'
                     layout_path = os.path.join(OilSpill.get_deploy_directory(), layout_name)
