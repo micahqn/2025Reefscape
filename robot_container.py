@@ -30,7 +30,7 @@ class RobotContainer:
         self._robot_state = RobotState(self.drivetrain)
 
         # Setting up bindings for necessary control of the swerve drive platform
-        self._drive = (
+        self._field_centric = (
             swerve.requests.FieldCentric()
             .with_deadband(self._max_speed * 0.1)
             .with_rotational_deadband(
@@ -64,7 +64,7 @@ class RobotContainer:
         self.drivetrain.setDefaultCommand(
             self.drivetrain.apply_request(
                 lambda: (
-                    self._drive.with_velocity_x(
+                    self._field_centric.with_velocity_x(
                         -self._driver_controller.getLeftY() * self._max_speed
                     )
                     .with_velocity_y(
