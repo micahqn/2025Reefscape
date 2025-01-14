@@ -248,9 +248,10 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
     def _configure_auto_builder(self) -> None:
         config = RobotConfig.fromGUISettings()
         AutoBuilder.configure(
-            lambda: self.get_state().pose,
-            self.reset_pose,
-            lambda: self.get_state().speeds,
+            lambda: self.get_state().pose,  # Supplier of current robot pose
+            self.reset_pose,  # Consumer for seeding pose against auto
+            lambda: self.get_state().speeds,  # Supplier of current robot speeds
+            # Consumer of ChassisSpeeds and feedforwards to drive the robot
             lambda speeds, feedforwards: self.set_control(
                 self._apply_robot_speeds_from_setpoint(speeds, feedforwards)
             ),
@@ -292,6 +293,13 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
     def apply_request(
             self, request: Callable[[], swerve.requests.SwerveRequest]
     ) -> Command:
+        """
+        Returns a command that applies the specified control request to this swerve drivetrain.
+        :param request: Lambda returning the request to apply
+        :type request: Callable[[], swerve.requests.SwerveRequest]
+        :returns: Command to run
+        :rtype: Command
+        """
         return self.run(lambda: self.set_control(request()))
 
     def sys_id_quasistatic(self, direction: SysIdRoutine.Direction) -> Command:
