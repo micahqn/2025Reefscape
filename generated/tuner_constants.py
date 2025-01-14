@@ -83,7 +83,7 @@ class TunerConstants:
     _invert_left_side = False
     _invert_right_side = True
 
-    _canbus = CANBus("", "./logs/example.hoot")
+    _canbus = CANBus("Drivetrain", "./logs/example.hoot")
     _pigeon_id = 9
 
 
