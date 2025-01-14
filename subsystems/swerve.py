@@ -10,6 +10,7 @@ from pathplannerlib.util import DriveFeedforwards
 from pathplannerlib.util.swerve import SwerveSetpointGenerator, SwerveSetpoint
 from phoenix6 import swerve, units, utils
 from phoenix6.swerve.requests import ApplyRobotSpeeds
+from phoenix6.swerve.swerve_drivetrain import DriveMotorT, SteerMotorT, EncoderT
 from wpilib import DriverStation, Notifier, RobotController, DataLogManager
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import ChassisSpeeds
@@ -143,9 +144,9 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
 
     def __init__(
             self,
-            drive_motor_type: type,
-            steer_motor_type: type,
-            encoder_type: type,
+            drive_motor_type: type[DriveMotorT],
+            steer_motor_type: type[SteerMotorT],
+            encoder_type: type[EncoderT],
             drivetrain_constants: swerve.SwerveDrivetrainConstants,
             arg0=None,
             arg1=None,
@@ -182,8 +183,8 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
                 .voltage(self.modules[0].drive_motor.get_motor_voltage().value)
                 .velocity(self.modules[0].drive_motor.get_velocity().value)
                 .position(self.modules[0].drive_motor.get_position().value),
-                self,
-                )
+                self
+            )
         )
         """SysId routine for characterizing translation. This is used to find PID gains for the drive motors."""
 
@@ -201,8 +202,8 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
                 .voltage(self.modules[0].steer_motor.get_motor_voltage().value)
                 .velocity(self.modules[0].steer_motor.get_velocity().value)
                 .position(self.modules[0].steer_motor.get_position().value),
-                self,
-                )
+                self
+            )
         )
         """SysId routine for characterizing steer. This is used to find PID gains for the steer motors."""
 
@@ -210,13 +211,7 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
             SysIdRoutine.Config(
                 # This is in radians per second², but SysId only supports "volts per second"
                 rampRate=math.pi / 6,
-                # Use dynamic voltage of 7 V
-                stepVoltage=7.0,
-                # Use default timeout (10 s)
-                # Log state with SignalLogger class
-                #recordState=lambda state: SignalLogger.write_string(
-                #"SysIdSteer_State", SysIdRoutineLog.stateEnumToString(state)
-                #),
+                stepVoltage=7.0
             ),
             SysIdRoutine.Mechanism(
                 lambda output: (
@@ -253,23 +248,19 @@ class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
     def _configure_auto_builder(self) -> None:
         config = RobotConfig.fromGUISettings()
         AutoBuilder.configure(
-            lambda: self.get_state().pose,  # Supplier of current robot pose
-            self.reset_pose,  # Consumer for seeding pose against auto
-            lambda: self.get_state().speeds,  # Supplier of current robot speeds
-            # Consumer of ChassisSpeeds and feedforwards to drive the robot
+            lambda: self.get_state().pose,
+            self.reset_pose,
+            lambda: self.get_state().speeds,
             lambda speeds, feedforwards: self.set_control(
                 self._apply_robot_speeds_from_setpoint(speeds, feedforwards)
             ),
             PPHolonomicDriveController(
-                # PID constants for translation
                 PIDConstants(10.0, 0.0, 0.0),
-                # PID constants for rotation
                 PIDConstants(7.0, 0.0, 0.0)
             ),
             config,
-            # Assume the path needs to be flipped for Red vs Blue, this is normally the case
             lambda: (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed,
-            self  # Subsystem for requirements
+            self
         )
 
         self._setpoint_generator = SwerveSetpointGenerator(config, self._MAX_STEERING_VELOCITY)
