@@ -3,7 +3,7 @@ from importlib import metadata
 
 from commands2 import CommandScheduler, TimedCommandRobot
 from packaging.version import Version
-from wpilib import DataLogManager, DriverStation, RobotBase
+from wpilib import DataLogManager, DriverStation, RobotBase, Timer, SmartDashboard, RobotController
 
 import elasticlib
 from robot_container import RobotContainer
@@ -34,9 +34,10 @@ class OilSpill(TimedCommandRobot):
         else:
             return os.path.join(os.getcwd(), "deploy")
 
-    # Most of these are all here to suppress warnings
     def robotPeriodic(self) -> None:
-        pass
+        # Log important info
+        SmartDashboard.putNumber("Match Time", Timer.getMatchTime())
+        SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage())
     
     def _simulationPeriodic(self) -> None:
         pass
