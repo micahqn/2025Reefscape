@@ -18,7 +18,7 @@ Our climber is based on the RustHOUNDS' Ri3D robot's deep climb mechanism, utili
 
 ## Elevator
 
-Our elevator moves the pivot and intake up and down. Incredible. It is composed of a motor that moves the elevator up and down. Incredible.
+Our elevator moves the pivot and intake up and down. Incredible. It is composed of two motors that moves the elevator up and down. Incredible.
 
 ## Pivot
 
