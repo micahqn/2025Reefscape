@@ -85,7 +85,7 @@ def start_elastic_server() -> None:
         if utils.is_simulation():
             server_address = "127.0.0.1"
         else:
-            server_address = "10.63.43.2"
+            server_address = "10.0.1.200"
         with socketserver.TCPServer((server_address, 5800), DeployHTTPRequestHandler) as httpd:
             try:
                 httpd.serve_forever()
