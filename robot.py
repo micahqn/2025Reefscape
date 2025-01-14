@@ -30,7 +30,7 @@ class OilSpill(TimedCommandRobot):
     @staticmethod
     def get_deploy_directory():
         if os.path.exists("/home/lvuser"):
-            return "/home/lvuser/deploy"
+            return "/home/lvuser/py/deploy"
         else:
             return os.path.join(os.getcwd(), "deploy")
 

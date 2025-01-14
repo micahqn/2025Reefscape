@@ -1,11 +1,8 @@
 import math
-from abc import ABC
-from enum import auto, Enum
 from importlib import metadata
 from typing import Callable, overload
 
-import commands2.button
-from commands2 import Command, Subsystem, cmd
+from commands2 import Command, Subsystem
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder, RobotConfig
 from pathplannerlib.controller import PIDConstants, PPHolonomicDriveController
@@ -13,7 +10,6 @@ from pathplannerlib.util import DriveFeedforwards
 from pathplannerlib.util.swerve import SwerveSetpointGenerator, SwerveSetpoint
 from phoenix6 import swerve, units, utils
 from phoenix6.swerve.requests import ApplyRobotSpeeds
-from phoenix6.swerve.swerve_drivetrain import DriveMotorT, SteerMotorT, EncoderT
 from wpilib import DriverStation, Notifier, RobotController, DataLogManager
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import ChassisSpeeds
@@ -21,24 +17,13 @@ from wpimath.units import rotationsToRadians
 
 import robot
 from limelight import LimelightHelpers
-from subsystems import StateSubsystem
 
 
-class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
+class SwerveSubsystem(Subsystem, swerve.SwerveDrivetrain):
     """
-    Class that extends the Phoenix 6 SwerveDrivetrain class and implements
-    Subsystem so it can easily be used in command-based projects.
-    """
-
-    class SubsystemState(Enum):
-        FIELD_CENTRIC = auto()
-        ROBOT_CENTRIC = auto()
-        BRAKE = auto()
-        POINT = auto()
-        SYS_ID_DYNAMIC_FORWARD = auto()
-        SYS_ID_DYNAMIC_REVERSE = auto()
-        SYS_ID_QUASI_FORWARD = auto()
-        SYS_ID_QUASI_REVERSE = auto()
+   Class that extends the Phoenix 6 SwerveDrivetrain class and implements
+   Subsystem so it can easily be used in command-based projects.
+   """
 
     _SIM_LOOP_PERIOD: units.second = 0.005
 
@@ -56,7 +41,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
             steer_motor_type: type,
             encoder_type: type,
             drivetrain_constants: swerve.SwerveDrivetrainConstants,
-            controller: commands2.button.CommandXboxController,
             modules: list[swerve.SwerveModuleConstants],
     ) -> None:
         """
@@ -86,7 +70,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
             steer_motor_type: type,
             encoder_type: type,
             drivetrain_constants: swerve.SwerveDrivetrainConstants,
-            controller: commands2.button.CommandXboxController,
             odometry_update_frequency: units.hertz,
             modules: list[swerve.SwerveModuleConstants],
     ) -> None:
@@ -121,7 +104,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
             steer_motor_type: type,
             encoder_type: type,
             drivetrain_constants: swerve.SwerveDrivetrainConstants,
-            controller: commands2.button.CommandXboxController,
             odometry_update_frequency: units.hertz,
             odometry_standard_deviation: tuple[float, float, float],
             vision_standard_deviation: tuple[float, float, float],
@@ -161,17 +143,15 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
 
     def __init__(
             self,
-            drive_motor_type: type[DriveMotorT],
-            steer_motor_type: type[SteerMotorT],
-            encoder_type: type[EncoderT],
+            drive_motor_type: type,
+            steer_motor_type: type,
+            encoder_type: type,
             drivetrain_constants: swerve.SwerveDrivetrainConstants,
-            controller: commands2.button.CommandXboxController,
             arg0=None,
             arg1=None,
             arg2=None,
-            arg3=None
+            arg3=None,
     ):
-        StateSubsystem.__init__(self, "Drivetrain", current_state=self.SubsystemState.FIELD_CENTRIC)
         Subsystem.__init__(self)
         swerve.SwerveDrivetrain.__init__(
             self, drive_motor_type, steer_motor_type, encoder_type,
@@ -193,11 +173,7 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
         self._rotation_characterization = swerve.requests.SysIdSwerveRotation()
 
         self._sys_id_routine_translation = SysIdRoutine(
-            SysIdRoutine.Config(
-                # Use default ramp rate (1 V/s) and timeout (10 s)
-                # Reduce dynamic voltage to 4 V to prevent brownout
-                stepVoltage=4.0
-            ),
+            SysIdRoutine.Config(),
             SysIdRoutine.Mechanism(
                 lambda output: self.set_control(
                     self._translation_characterization.with_volts(output)
@@ -206,8 +182,8 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
                 .voltage(self.modules[0].drive_motor.get_motor_voltage().value)
                 .velocity(self.modules[0].drive_motor.get_velocity().value)
                 .position(self.modules[0].drive_motor.get_position().value),
-                self
-            ),
+                self,
+                ),
         )
         """SysId routine for characterizing translation. This is used to find PID gains for the drive motors."""
 
@@ -225,8 +201,8 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
                 .voltage(self.modules[0].steer_motor.get_motor_voltage().value)
                 .velocity(self.modules[0].steer_motor.get_velocity().value)
                 .position(self.modules[0].steer_motor.get_position().value),
-                self
-            ),
+                self,
+                ),
         )
         """SysId routine for characterizing steer. This is used to find PID gains for the steer motors."""
 
@@ -236,6 +212,11 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
                 rampRate=math.pi / 6,
                 # Use dynamic voltage of 7 V
                 stepVoltage=7.0,
+                # Use default timeout (10 s)
+                # Log state with SignalLogger class
+                #recordState=lambda state: SignalLogger.write_string(
+                #"SysIdSteer_State", SysIdRoutineLog.stateEnumToString(state)
+                #),
             ),
             SysIdRoutine.Mechanism(
                 lambda output: (
@@ -257,26 +238,8 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
         See the documentation of swerve.requests.SysIdSwerveRotation for info on importing the log to SysId.
         """
 
-        self._sys_id_routine_to_apply = self._sys_id_routine_translation
+        self._sys_id_routine_to_apply = self._sys_id_routine_rotation
         """The SysId routine to test"""
-
-        self._controller = controller
-
-        self._max_speed = None
-        self._max_angular_rate = rotationsToRadians(1)
-
-        self._drive = (swerve.requests.FieldCentric()
-            .with_rotational_deadband(self._max_angular_rate * 0.1)  # Add a 10% deadband
-            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE)  # Use open-loop control for drive motors
-        )
-
-        self._robot_centric = (swerve.requests.RobotCentric()
-            .with_rotational_deadband(self._max_angular_rate * 0.1)
-            .with_drive_request_type(swerve.SwerveModule.DriveRequestType.OPEN_LOOP_VOLTAGE)
-        )
-
-        self._brake = swerve.requests.SwerveDriveBrake()
-        self._point = swerve.requests.PointWheelsAt()
 
         if utils.is_simulation():
             self._start_sim_thread()
@@ -338,19 +301,7 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
     def apply_request(
             self, request: Callable[[], swerve.requests.SwerveRequest]
     ) -> Command:
-        class SwerveCommand(Command):
-            """For some reason, when attempting to use ``self.run``, just simply doesn't work. This is the hacky fix."""
-
-            def __init__(self, drivetrain: SwerveSubsystem, cmd_request: Callable[[], swerve.requests.SwerveRequest]):
-                super().__init__()
-                self.drivetrain = drivetrain
-                self.request = cmd_request
-                self.setName(str(self.request()))
-
-            def initialize(self):
-                self.drivetrain.set_control(request())
-
-        return SwerveCommand(self, lambda: self.set_control(request()))
+        return self.run(lambda: self.set_control(request()))
 
     def sys_id_quasistatic(self, direction: SysIdRoutine.Direction) -> Command:
         return self._sys_id_routine_to_apply.quasistatic(direction)
@@ -359,15 +310,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
         return self._sys_id_routine_to_apply.dynamic(direction)
 
     def periodic(self) -> None:
-        super().periodic()
-
-        if self._max_speed is None:
-            from generated.tuner_constants import TunerConstants  # Avoids circular import
-            self._max_speed = TunerConstants.speed_at_12_volts
-            self._drive.deadband = self._robot_centric.deadband = self._max_speed * 0.1
-
-        self._handle_desired_state()
-
         # Periodically try to apply the operator perspective.
         # If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
         # This allows us to correct the perspective in case the robot code restarts mid-match.
@@ -385,48 +327,6 @@ class SwerveSubsystem(StateSubsystem, swerve.SwerveDrivetrain, ABC):
 
         if not utils.is_simulation():
             self._add_vision_measurements()
-
-    def _handle_desired_state(self) -> None:
-        """Takes the desired subsystem state and applies the needed control request."""
-        match self._subsystem_state:
-            case self.SubsystemState.FIELD_CENTRIC:
-                self.apply_request(lambda: self._drive
-                    .with_velocity_x(-self._controller.getLeftY() * self._max_speed)
-                    .with_velocity_y(-self._controller.getLeftX() * self._max_speed)
-                    .with_rotational_rate(-self._controller.getRightX() * self._max_angular_rate)
-                )
-            case self.SubsystemState.ROBOT_CENTRIC:
-                self.apply_request(lambda: self._robot_centric
-                    .with_velocity_x(-self._controller.getLeftY() * self._max_speed)
-                    .with_velocity_y(-self._controller.getLeftX() * self._max_speed)
-                    .with_rotational_rate(-self._controller.getRightX() * self._max_angular_rate)
-                )
-            case self.SubsystemState.BRAKE:
-                self.apply_request(lambda: self._brake)
-            case self.SubsystemState.POINT:
-                self.apply_request(lambda: self._point
-                    .with_module_direction(Rotation2d(-self._controller.getLeftY(), -self._controller.getLeftX()))
-                )
-            case self.SubsystemState.SYS_ID_DYNAMIC_FORWARD:
-                self.sys_id_dynamic(SysIdRoutine.Direction.kForward).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
-            case self.SubsystemState.SYS_ID_DYNAMIC_REVERSE:
-                self.sys_id_dynamic(SysIdRoutine.Direction.kReverse).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
-            case self.SubsystemState.SYS_ID_QUASI_FORWARD:
-                self.sys_id_quasistatic(SysIdRoutine.Direction.kForward).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
-            case self.SubsystemState.SYS_ID_QUASI_REVERSE:
-                self.sys_id_quasistatic(SysIdRoutine.Direction.kReverse).onlyIf(lambda: not DriverStation.isFMSAttached()).schedule()
-
-    def set_desired_state(self, desired_state: SubsystemState) -> None:
-        if desired_state is self._subsystem_state:
-            return
-        self._subsystem_state = desired_state
-
-    def set_desired_state_command(self, state: SubsystemState) -> Command:
-        return cmd.startEnd(
-            lambda: self.set_desired_state(state),
-            lambda: self.set_desired_state(self.SubsystemState.FIELD_CENTRIC),
-            self
-        )
 
     def _add_vision_measurements(self) -> None:
         LimelightHelpers.set_robot_orientation(
