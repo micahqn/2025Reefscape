@@ -6,96 +6,90 @@ import threading
 from enum import Enum
 
 from ntcore import NetworkTableInstance, PubSubOptions
-from phoenix6 import utils
 from wpilib import DataLogManager
 
 
-def start_elastic_server() -> None:
-    """Starts HTTP server on port 5800 on a separate thread to allow Elastic to download layouts remotely."""
+def start_elastic_server(address: str) -> None:
+    """Starts TCP server on port 5800 on a separate thread to allow Elastic to download layouts remotely."""
     from robot import OilSpill
 
-    def start_request_handler() -> None:
+    def start_request_handler(target_address: str) -> None:
         # noinspection PyTypeChecker
         class DeployHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
             def __init__(self, *args, **kwargs) -> None:
                 super().__init__(*args, directory=OilSpill.get_deploy_directory(), **kwargs)
 
+            # noinspection PyNoneFunctionAssignment
             def do_GET(self):
-                DataLogManager.log(f"Received GET request for {self.path}")
-
                 if self.path == "/?format=json":
                     try:
-                        layouts_directory = os.path.join(OilSpill.get_deploy_directory())  # Point to the layouts directory
+
+                        layouts_directory = os.path.join(OilSpill.get_deploy_directory())
                         response_data = {
                             "files": []
                         }
 
-                        # List all JSON files in the layouts directory
                         for layout_file in os.listdir(layouts_directory):
                             if layout_file.endswith('.json'):
                                 response_data["files"].append({"name": layout_file})
 
-                        # Log the response data before sending
                         response_json = json.dumps(response_data)
-                        DataLogManager.log(f"Response JSON: {response_json}")
 
-                        self.send_response(200)
+                        _ = self.send_response_only(200)
                         self.send_header("Content-Type", "application/json")
                         self.end_headers()
                         self.wfile.write(response_json.encode('utf-8'))
-                        DataLogManager.log("Response sent with files list.")
+                        DataLogManager.log(f"{target_address}: 200 OK, application/json")
                     except Exception as exc:
-                        self.send_response(500)
+                        _ = self.send_response_only(500)
                         self.send_header("Content-Type", "text/plain")
                         self.end_headers()
                         self.wfile.write(f"Error: {str(exc)}".encode('utf-8'))
-                        DataLogManager.log(f"Error serving layout: {exc}")
+                        DataLogManager.log(f"{target_address}: 500, Error serving layout: {exc}")
                 elif self.path.endswith("layout.json"):
-                    # Handle requests for specific layout files like /elastic-layout.json
-                    layout_name = self.path.lstrip("/")  # Remove the leading '/'
+                    layout_name = self.path.lstrip("/")
                     layout_path = os.path.join(OilSpill.get_deploy_directory(), layout_name)
 
                     if os.path.exists(layout_path):
                         try:
-                            # Serve the layout file
                             with open(layout_path, "rb") as layout_file:
                                 file_data = layout_file.read()
 
-                            self.send_response(200)
+                            _ = self.send_response_only(200)
                             self.send_header("Content-Type", "application/json")
                             self.send_header("Content-Length", str(len(file_data)))
                             self.end_headers()
                             self.wfile.write(file_data)
-                            DataLogManager.log(f"Served layout file: {layout_name}")
+                            DataLogManager.log(f"{target_address}: 200 OK, {layout_name}")
                         except Exception as exc:
-                            self.send_response(500)
+                            _ = self.send_response_only(500)
                             self.send_header("Content-Type", "text/plain")
                             self.end_headers()
                             self.wfile.write(f"Error serving layout: {str(exc)}".encode('utf-8'))
-                            DataLogManager.log(f"Error serving layout: {exc}")
+                            DataLogManager.log(f"{target_address}: 500, Error serving layout: {exc}")
                     else:
-                        # If layout file not found
-                        self.send_response(404)
+                        _ = self.send_response_only(404)
                         self.send_header("Content-Type", "text/plain")
                         self.end_headers()
                         self.wfile.write(b"Layout file not found.")
-                        DataLogManager.log(f"Layout file '{layout_name}' not found.")
+                        DataLogManager.log(f"{target_address}: 404, Layout file '{layout_name}' not found.")
 
-        if utils.is_simulation():
-            server_address = "127.0.0.1"
-        else:
-            server_address = "10.0.1.200"
-        with socketserver.TCPServer((server_address, 5800), DeployHTTPRequestHandler) as httpd:
-            try:
-                httpd.serve_forever()
-            except Exception as e:
-                DataLogManager.log(f"Web server encountered an error: {e}")
-            finally:
-                httpd.server_close()
+        try:
+            with socketserver.TCPServer((target_address, 5800), DeployHTTPRequestHandler) as httpd:
+                try:
+                    httpd.serve_forever()
+                except Exception as e:
+                    DataLogManager.log(f"{target_address}: Web server encountered an error: {e}")
+                finally:
+                    httpd.server_close()
+        except OSError:
+            DataLogManager.log(f"OSError for Elastic server {target_address}!")
 
-    server_thread = threading.Thread(target=start_request_handler, daemon=True)
+    server_thread = threading.Thread(target=lambda: start_request_handler(address), daemon=True)
     server_thread.start()
+
+    DataLogManager.log(f"Opened Elastic TCP at {address}")
 
 
 class NotificationLevel(Enum):

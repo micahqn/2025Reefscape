@@ -3,6 +3,7 @@ from importlib import metadata
 
 from commands2 import CommandScheduler, TimedCommandRobot
 from packaging.version import Version
+from phoenix6 import utils
 from wpilib import DataLogManager, DriverStation, RobotBase, Timer, SmartDashboard, RobotController
 
 import elasticlib
@@ -23,7 +24,14 @@ class OilSpill(TimedCommandRobot):
             DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
 
-        elasticlib.start_elastic_server()
+        if utils.is_simulation():
+            elasticlib.start_elastic_server("127.0.0.1")
+        else:
+            elasticlib.start_elastic_server("10.63.43.2")
+            elasticlib.start_elastic_server("10.0.1.200")
+
+        elasticlib.start_elastic_server("10.63.43.2")
+        elasticlib.start_elastic_server("10.0.1.200")
 
         DataLogManager.log("Robot initialized")
 
@@ -38,7 +46,7 @@ class OilSpill(TimedCommandRobot):
         # Log important info
         SmartDashboard.putNumber("Match Time", Timer.getMatchTime())
         SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage())
-    
+
     def _simulationPeriodic(self) -> None:
         pass
 
