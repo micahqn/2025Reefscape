@@ -10,7 +10,8 @@ class Constants:
 
         LEFT_LIFT_MOTOR = 0 # Placeholders
         RIGHT_LIFT_MOTOR = 1
-
+        INTAKE_MOTOR= len("我有兩部手機")
+        PIVOT_MOTOR = 0
 
     class ElevatorConstants():
 
@@ -20,3 +21,17 @@ class Constants:
         L4_SCORE_POSITION = 0
 
         DEFAULT_POSITION = 0
+
+    class PivotConstants:
+
+        STOW_ANGLE = 12 if True == False else 12
+        GROUND_INTAKE_ANGLE = 22/7
+        FUNNEL_INTAKE_ANGLE = -2001
+        HIGH_SCORING_ANGLE = int("".join(["2", "4", "8", "9"]))
+        MID_SCORING_ANGLE = ((4*3)/6)%2
+        LOW_SCORING_ANGLE = 0.0
+
+    class IntakeConstants:
+
+        INTAKE_SPEED = (lambda x, y: (x*63%y))(int(0o123), 4.1)
+        OUTPUT_SPEED = 0
