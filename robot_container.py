@@ -14,8 +14,9 @@ from robot_state import RobotState
 from subsystems.superstructure import Superstructure
 
 from subsystems.climber import ClimberSubsystem
-from subsystems.pivot import Pivot
-from subsystems.intake import Intake
+from subsystems.pivot import PivotSubsystem
+from subsystems.intake import IntakeSubsystem
+from subsystems.elevator import ElevatorSubsystem
 
 
 class RobotContainer:
@@ -36,13 +37,11 @@ class RobotContainer:
         self.drivetrain = TunerConstants.create_drivetrain()
 
         self.climber = ClimberSubsystem()
-        self.superstructure = Superstructure(self.drivetrain)
+        self.pivot = PivotSubsystem()
+        self.intake = IntakeSubsystem()
+        self.elevator = ElevatorSubsystem()
 
-        self.pivot = Pivot()
-        self.intake = Intake()
-
-        self.superstructure = Superstructure(self.drivetrain, self.pivot)
-
+        self.superstructure = Superstructure(self.drivetrain, self.pivot, self.elevator)
         self._robot_state = RobotState(self.drivetrain)
 
         # Setting up bindings for necessary control of the swerve drive platform
