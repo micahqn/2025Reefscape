@@ -1,12 +1,8 @@
 """
 File: swerve.py
 Description: The swerve subsystem, plus method to add MegaTag2 pose estimate.
-Authors: Caden Dalley, James Haddix
-Revisions    Date            Author            Revision
-             2024/01/11      Caden Dalley      Created
-             2024/01/15      Caden Dalley      Add PP updates, AdvantageScope logging, Elastic server
-             2024/01/15      Caden Dalley      Tuned
-             2024/01/22      James Haddix      Added comments
+Main Author: Caden Dalley
+Co-Authors: James Haddix
 """
 
 import math
