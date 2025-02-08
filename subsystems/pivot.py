@@ -5,7 +5,8 @@ from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import TalonFXConfiguration
-from phoenix6.controls import PositionDutyCycle, VoltageOut
+from phoenix6.signals import InvertedValue
+from phoenix6.controls import PositionDutyCycle, VoltageOut, Follower
 from wpilib import SmartDashboard, DriverStation
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.system.plant import DCMotor
@@ -34,15 +35,26 @@ class PivotSubsystem(StateSubsystem):
     _master_config.feedback.with_rotor_to_sensor_ratio(Constants.PivotConstants.GEAR_RATIO)
     _master_config.with_slot0(Constants.PivotConstants.GAINS)
 
+    _follower_config = TalonFXConfiguration
+    _follower_config.feedback.with_rotor_to_sensor_ratio(Constants.PivotConstants.GEAR_RATIO)
+    _follower_config.with_slot0(Constants.PivotConstants.GAINS)
+    _follower_config.motor_output = InvertedValue.CLOCKWISE_POSITIVE
+
     def __init__(self) -> None:
         super().__init__("Pivot")
 
-        self._pivot_motor = TalonFX(Constants.MotorIDs.PIVOT_MOTOR)
-        self._pivot_motor.configurator.apply(self._master_config)
+        self._master_pivot_motor = TalonFX(Constants.MotorIDs.LEFT_PIVOT_MOTOR)
+        self._follower_pivot_motor = TalonFX(Constants.MotorIDs.RIGHT_PIVOT_MOTOR)
+
+        self._master_pivot_motor.configurator.apply(self._master_config)
+        self._follower_pivot_motor.configurator.apply(self._follower_config)
+
         self._add_talon_sim_model(self._pivot_motor, DCMotor.krakenX60FOC(2), Constants.PivotConstants.GEAR_RATIO)
 
         self._position_request = PositionDutyCycle(0)
         self._sys_id_request = VoltageOut(0)
+
+        self._follower_motor.set_control(Follower(self._master_pivot_motor.device_id, False))
 
         self._sys_id_routine = SysIdRoutine(
             SysIdRoutine.Config(
