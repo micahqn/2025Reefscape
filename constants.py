@@ -54,14 +54,14 @@ class Constants:
     class PivotConstants:
 
         STOW_ANGLE = 0
-        GROUND_INTAKE_ANGLE = 0.25
+        GROUND_INTAKE_ANGLE = units.degreesToRotations(90)
         FUNNEL_INTAKE_ANGLE = 0
-        ALGAE_INTAKE_ANGLE = 0.25
-        HIGH_SCORING_ANGLE = 0.15
-        MID_SCORING_ANGLE = 0.25
-        LOW_SCORING_ANGLE = 0.25
-        NET_SCORING_ANGLE = 0.15
-        PROCESSOR_SCORING_ANGLE = 0.25
+        ALGAE_INTAKE_ANGLE = units.degreesToRotations(90)
+        HIGH_SCORING_ANGLE = units.degreesToRotations(54)
+        MID_SCORING_ANGLE = units.degreesToRotations(90)
+        LOW_SCORING_ANGLE = units.degreesToRotations(90)
+        NET_SCORING_ANGLE = units.degreesToRotations(54)
+        PROCESSOR_SCORING_ANGLE = units.degreesToRotations(90)
 
         GEAR_RATIO = 961/36
         GAINS = (Slot0Configs()
