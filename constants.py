@@ -1,6 +1,7 @@
 from phoenix6.signals import GravityTypeValue
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 from phoenix6.configs.config_groups import Slot0Configs
+from wpimath import units
 
 apriltag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
 
@@ -16,7 +17,7 @@ class Constants:
         CLIMB_MOTOR = 15
 
     class ClimberConstants:
-        GEAR_RATIO = 100
+        GEAR_RATIO = 15376/135
         GAINS = (Slot0Configs()
             .with_k_p(1.0)
             .with_k_i(0.0)
