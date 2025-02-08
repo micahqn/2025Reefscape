@@ -11,8 +11,9 @@ class Constants:
         LEFT_LIFT_MOTOR = 10
         RIGHT_LIFT_MOTOR = 11
         INTAKE_MOTOR = 12
-        PIVOT_MOTOR = 13
-        CLIMB_MOTOR = 14
+        LEFT_PIVOT_MOTOR = 13
+        RIGHT_PIVOT_MOTOR = 14
+        CLIMB_MOTOR = 15
 
     class ClimberConstants:
         GEAR_RATIO = 100
