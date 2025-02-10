@@ -1,5 +1,5 @@
 from phoenix6 import CANBus, configs, hardware, signals, swerve, units
-from subsystems.command_swerve_drivetrain import CommandSwerveDrivetrain
+from subsystems.swerve import SwerveSubsystem
 from wpimath.units import inchesToMeters
 
 
@@ -218,20 +218,20 @@ class TunerConstants:
     )
 
     @classmethod
-    def create_drivetrain(clazz) -> CommandSwerveDrivetrain:
+    def create_drivetrain(cls) -> SwerveSubsystem:
         """
-        Creates a CommandSwerveDrivetrain instance.
+        Creates a SwerveSubsystem instance.
         This should only be called once in your robot program.
         """
-        return CommandSwerveDrivetrain(
+        return SwerveSubsystem(
             hardware.TalonFX,
             hardware.TalonFX,
             hardware.CANcoder,
-            clazz.drivetrain_constants,
+            cls.drivetrain_constants,
             [
-                clazz.front_left,
-                clazz.front_right,
-                clazz.back_left,
-                clazz.back_right,
-            ],
+                cls.front_left,
+                cls.front_right,
+                cls.back_left,
+                cls.back_right,
+            ]
         )
