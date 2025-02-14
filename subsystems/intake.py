@@ -49,7 +49,7 @@ class IntakeSubsystem(StateSubsystem):
                 self._velocity_request.ignore_hardware_limits = False
                 self._velocity_request.velocity = Constants.IntakeConstants.INTAKE_SPEED
             case self.SubsystemState.OUTPUTTING:
-                self._velocity_request.ignore_hardware_limits = True
+                self._velocity_request.ignore_hardware_limits = True # Ignore the beam break stop while scoring coral
                 self._velocity_request.velocity = Constants.IntakeConstants.OUTPUT_SPEED
 
         self._subsystem_state = desired_state
