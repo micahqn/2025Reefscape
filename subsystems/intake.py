@@ -43,10 +43,13 @@ class IntakeSubsystem(StateSubsystem):
         # TODO: Add beam break sensors to help determine correct state.
         match desired_state:
             case self.SubsystemState.DEFAULT:
+                self._velocity_request.ignore_hardware_limits = False
                 self._velocity_request.velocity = 0
             case self.SubsystemState.INTAKING:
+                self._velocity_request.ignore_hardware_limits = False
                 self._velocity_request.velocity = Constants.IntakeConstants.INTAKE_SPEED
             case self.SubsystemState.OUTPUTTING:
+                self._velocity_request.ignore_hardware_limits = True
                 self._velocity_request.velocity = Constants.IntakeConstants.OUTPUT_SPEED
 
         self._subsystem_state = desired_state
