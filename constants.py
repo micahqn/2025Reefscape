@@ -94,7 +94,7 @@ class Constants:
         CORAL_OUTPUT_SPEED = 1
 
         ALGAE_INTAKE_SPEED = 1
-        ALGAE_OUTPUT_SPEED = 1
+        ALGAE_OUTPUT_SPEED = -1
 
         GEAR_RATIO = 4
         GAINS = (Slot0Configs()
