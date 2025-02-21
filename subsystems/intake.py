@@ -29,7 +29,7 @@ class IntakeSubsystem(StateSubsystem):
                      )
 
     def __init__(self) -> None:
-        super().__init__("Intake")
+        super().__init__("Intake", self.SubsystemState.DEFAULT)
 
         self._intake_motor = TalonFX(Constants.CanIDs.INTAKE_TALON)
         self._intake_motor.configurator.apply(self._motor_config)

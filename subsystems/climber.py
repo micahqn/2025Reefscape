@@ -29,7 +29,7 @@ class ClimberSubsystem(StateSubsystem):
                      )
 
     def __init__(self) -> None:
-        super().__init__("Climber")
+        super().__init__("Climber", self.SubsystemState.STOP)
 
         self.climbServo = Servo(0)
         self._climb_motor = TalonFX(Constants.CanIDs.CLIMB_TALON)

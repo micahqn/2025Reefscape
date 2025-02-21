@@ -61,7 +61,8 @@ class PivotSubsystem(StateSubsystem):
     _follower_config.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
 
     def __init__(self) -> None:
-        super().__init__("Pivot")
+        super().__init__("Pivot", self.SubsystemState.STOW)
+
         self._encoder = CANcoder(Constants.CanIDs.PIVOT_CANCODER)
         self._master_motor = TalonFX(Constants.CanIDs.LEFT_PIVOT_TALON)
         self._follower_motor = TalonFX(Constants.CanIDs.RIGHT_PIVOT_TALON)

@@ -60,7 +60,7 @@ class ElevatorSubsystem(StateSubsystem):
     _limit_switch_config.reverse_limit_autoset_position_enable = True
 
     def __init__(self) -> None:
-        super().__init__("Elevator")
+        super().__init__("Elevator", self.SubsystemState.DEFAULT)
 
         self._master_motor = TalonFX(Constants.CanIDs.LEFT_ELEVATOR_TALON)
         _master_config = self._motor_config
