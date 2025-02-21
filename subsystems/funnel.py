@@ -27,9 +27,7 @@ class FunnelSubsystem(StateSubsystem):
     _funnel_config.with_motion_magic(MotionMagicConfigs().with_motion_magic_cruise_velocity(Constants.FunnelConstants.CRUISE_VELOCITY).with_motion_magic_acceleration(Constants.FunnelConstants.MM_ACCELERATION))
 
     def __init__(self) -> None:
-        super().__init__("Funnel")
-
-        self._subsystem_state = self.SubsystemState.DOWN
+        super().__init__("Funnel", self.SubsystemState.DOWN)
 
         self._funnel_motor = TalonFX(Constants.CanIDs.FUNNEL_TALON)
 
