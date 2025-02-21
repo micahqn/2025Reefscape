@@ -41,6 +41,11 @@ class Constants:
 
         DEFAULT_POSITION = 0
 
+        CRUISE_VELOCITY = 6
+        MM_ACCELERATION = 6
+        EXPO_K_V = 10
+        EXPO_K_A = 4
+
         GEAR_RATIO = 31/4 # Placeholder
         GAINS = (Slot0Configs()
             .with_k_g(0.03)
