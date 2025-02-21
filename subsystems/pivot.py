@@ -4,7 +4,7 @@ from commands2 import Command
 from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger, utils, BaseStatusSignal
 from phoenix6.configs import TalonFXConfiguration, CANcoderConfiguration, MotionMagicConfigs
-from phoenix6.controls import VoltageOut, Follower, DutyCycleOut, MotionMagicDutyCycle
+from phoenix6.controls import VoltageOut, Follower, MotionMagicVoltage
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import InvertedValue, FeedbackSensorSourceValue, NeutralModeValue
 from wpilib import DriverStation, RobotController
@@ -76,8 +76,8 @@ class PivotSubsystem(StateSubsystem):
         self._at_setpoint_debounce = Debouncer(0.1, Debouncer.DebounceType.kRising)
         self._at_setpoint = True
 
-        self._position_request = MotionMagicDutyCycle(0)
-        self._brake_request = DutyCycleOut(0)
+        self._position_request = MotionMagicVoltage(0)
+        self._brake_request = VoltageOut(0)
         self._sys_id_request = VoltageOut(0)
 
         self._follower_motor.set_control(Follower(self._master_motor.device_id, True))
