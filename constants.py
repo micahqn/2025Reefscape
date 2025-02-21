@@ -106,6 +106,12 @@ class Constants:
             .with_k_a(0.0)
         )
 
+    class VisionConstants:
+        FRONT_LEFT = "limelight-fl"
+        FRONT_RIGHT = "limelight-fr"
+        FRONT_CENTER = "limelight-front"
+        BACK_CENTER = "limelight-back"
+
     class FunnelConstants:
 
         CORAL_STATION_POSITION = 10 # All Placeholders
