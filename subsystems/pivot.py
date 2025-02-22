@@ -7,7 +7,7 @@ from phoenix6.configs import TalonFXConfiguration, CANcoderConfiguration, Motion
 from phoenix6.controls import VoltageOut, Follower, MotionMagicVoltage
 from phoenix6.hardware import CANcoder, TalonFX
 from phoenix6.signals import InvertedValue, FeedbackSensorSourceValue, NeutralModeValue
-from wpilib import DriverStation, RobotController
+from wpilib import DriverStation, RobotBase, RobotController
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.filter import Debouncer
 from wpimath.system.plant import DCMotor
@@ -36,6 +36,20 @@ class PivotSubsystem(StateSubsystem):
         NET_SCORING = auto()
         PROCESSOR_SCORING = auto()
 
+    _state_configs: dict[SubsystemState, float | None] = {
+        SubsystemState.IDLE: None,
+        SubsystemState.AVOID_ELEVATOR: Constants.PivotConstants.ELEVATOR_PRIORITY_ANGLE,
+        SubsystemState.STOW: Constants.PivotConstants.STOW_ANGLE,
+        SubsystemState.GROUND_INTAKE: Constants.PivotConstants.GROUND_INTAKE_ANGLE,
+        SubsystemState.FUNNEL_INTAKE: Constants.PivotConstants.FUNNEL_INTAKE_ANGLE,
+        SubsystemState.ALGAE_INTAKE: Constants.PivotConstants.ALGAE_INTAKE_ANGLE,
+        SubsystemState.HIGH_SCORING: Constants.PivotConstants.HIGH_SCORING_ANGLE,
+        SubsystemState.MID_SCORING: Constants.PivotConstants.MID_SCORING_ANGLE,
+        SubsystemState.LOW_SCORING: Constants.PivotConstants.LOW_SCORING_ANGLE,
+        SubsystemState.NET_SCORING: Constants.PivotConstants.NET_SCORING_ANGLE,
+        SubsystemState.PROCESSOR_SCORING: Constants.PivotConstants.PROCESSOR_SCORING_ANGLE,
+    }
+
     _encoder_config = CANcoderConfiguration()
     (
         _encoder_config.magnet_sensor
@@ -51,6 +65,7 @@ class PivotSubsystem(StateSubsystem):
     )
     _master_config.motor_output.inverted = InvertedValue.CLOCKWISE_POSITIVE
     _master_config.motor_output.neutral_mode = NeutralModeValue.BRAKE
+
     _master_config.with_slot0(Constants.PivotConstants.GAINS)
     _master_config.with_motion_magic(MotionMagicConfigs().with_motion_magic_cruise_velocity(Constants.PivotConstants.CRUISE_VELOCITY).with_motion_magic_acceleration(Constants.PivotConstants.MM_ACCELERATION))
 
@@ -105,14 +120,14 @@ class PivotSubsystem(StateSubsystem):
         super().periodic()
 
         latency_compensated_position = BaseStatusSignal.get_latency_compensated_value(
-            self._master_motor.get_position(), self._master_motor.get_velocity()
+            self._master_motor.get_position(False), self._master_motor.get_velocity(False)
         )
         self._at_setpoint = self._at_setpoint_debounce.calculate(abs(latency_compensated_position - self._position_request.position) <= Constants.PivotConstants.SETPOINT_TOLERANCE)
-        self.get_network_table().getEntry("At Setpoint").setBoolean(self._at_setpoint)
-        self.get_network_table().getEntry("In Elevator").setBoolean(self.is_in_elevator())
+        #self.get_network_table().getEntry("At Setpoint").setBoolean(self._at_setpoint)
+        #self.get_network_table().getEntry("In Elevator").setBoolean(self.is_in_elevator())
 
         # Update CANcoder sim state
-        if utils.is_simulation():
+        if utils.is_simulation() and not RobotBase.isReal():
             talon_sim = self._sim_models[0][0]
             cancoder_sim = self._encoder.sim_state
 
@@ -121,46 +136,16 @@ class PivotSubsystem(StateSubsystem):
             cancoder_sim.set_velocity(talon_sim.getAngularVelocity() / Constants.PivotConstants.GEAR_RATIO)
             
     def set_desired_state(self, desired_state: SubsystemState) -> None:
-        if DriverStation.isTest() or self.is_frozen():
+        if not super().set_desired_state(desired_state):
             return
 
-        match desired_state:
-            case self.SubsystemState.AVOID_ELEVATOR:
-                self._position_request.position = Constants.PivotConstants.ELEVATOR_PRIORITY_ANGLE
-
-            case self.SubsystemState.STOW:
-                self._position_request.position = Constants.PivotConstants.STOW_ANGLE
-            
-            case self.SubsystemState.GROUND_INTAKE:
-                self._position_request.position = Constants.PivotConstants.GROUND_INTAKE_ANGLE
-            
-            case self.SubsystemState.FUNNEL_INTAKE:
-                self._position_request.position = Constants.PivotConstants.FUNNEL_INTAKE_ANGLE
-            
-            case self.SubsystemState.HIGH_SCORING:
-                self._position_request.position = Constants.PivotConstants.HIGH_SCORING_ANGLE
-            
-            case self.SubsystemState.MID_SCORING:
-                self._position_request.position = Constants.PivotConstants.MID_SCORING_ANGLE
-            
-            case self.SubsystemState.LOW_SCORING:
-                self._position_request.position = Constants.PivotConstants.LOW_SCORING_ANGLE
-            
-            case self.SubsystemState.NET_SCORING:
-                self._position_request.position = Constants.PivotConstants.NET_SCORING_ANGLE
-            
-            case self.SubsystemState.PROCESSOR_SCORING:
-                self._position_request.position = Constants.PivotConstants.PROCESSOR_SCORING_ANGLE
-            
-            case self.SubsystemState.ALGAE_INTAKE:
-                self._position_request.position = Constants.PivotConstants.ALGAE_INTAKE_ANGLE
-
-        self._subsystem_state = desired_state
-
-        if self.get_current_state() is self.SubsystemState.IDLE:
+        position = self._state_configs.get(desired_state, None)
+        if position is None:
             self._master_motor.set_control(self._brake_request)
-        else:
-            self._master_motor.set_control(self._position_request)
+            return
+
+        self._position_request.position = position
+        self._master_motor.set_control(self._position_request)
 
     def is_at_setpoint(self) -> bool:
         return self._at_setpoint
