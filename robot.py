@@ -2,7 +2,7 @@ import os.path
 
 from commands2 import CommandScheduler, TimedCommandRobot
 from phoenix6 import utils, SignalLogger
-from wpilib import DataLogManager, DriverStation, RobotBase, Timer, SmartDashboard, RobotController
+from wpilib import DataLogManager, DriverStation
 from wpinet import WebServer, PortForwarder
 
 from constants import Constants
@@ -18,10 +18,7 @@ class OilSpill(TimedCommandRobot):
         DriverStation.silenceJoystickConnectionWarning(not DriverStation.isFMSAttached())
         self.container = RobotContainer()
 
-        if RobotBase.isReal():
-            DataLogManager.start("/home/lvuser/logs")
-        else:
-            DataLogManager.start()
+        DataLogManager.start()
         DriverStation.startDataLog(DataLogManager.getLog())
 
         WebServer.getInstance().start(5800, self.get_deploy_directory())

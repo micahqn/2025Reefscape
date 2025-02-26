@@ -40,30 +40,32 @@ class VisionSubsystem(StateSubsystem):
         if not all(isinstance(cam, str) for cam in self._cameras):
             raise TypeError(f"All cameras must be strings! Given: {self._cameras}")
 
+        self._executor = concurrent.futures.ThreadPoolExecutor()  # Executor for threads
+
     def periodic(self):
         super().periodic()
 
+        # Store state locally to reduce repeated Enum.__get__ calls
         state = self._subsystem_state
 
+        # Skip processing if robot is spinning too fast or estimates are disabled
         if abs(self._swerve.pigeon2.get_angular_velocity_z_world().value) > 720 or state == self.SubsystemState.DISABLE_ESTIMATES:
             return
 
-        pigeon_values = self._get_pigeon_values()
+        # Process vision estimates concurrently
+        futures = [
+            self._executor.submit(self._process_camera, cam, state, self._get_pigeon_values())
+            for cam in self._cameras
+        ]
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = {
-                executor.submit(self._process_camera, cam, state, pigeon_values): cam
-                for cam in self._cameras
-            }
-
-            for future in concurrent.futures.as_completed(futures):
-                estimate = future.result()
-                if estimate and estimate.tag_count > 0 and state is not self.SubsystemState.DISABLE_ESTIMATES:
-                    self._swerve.add_vision_measurement(
-                        estimate.pose,
-                        utils.fpga_to_current_time(estimate.timestamp_seconds),
-                        self._get_dynamic_std_devs(estimate),
-                    )
+        for future in concurrent.futures.as_completed(futures):
+            estimate = future.result()
+            if estimate and estimate.tag_count > 0:
+                self._swerve.add_vision_measurement(
+                    estimate.pose,
+                    utils.fpga_to_current_time(estimate.timestamp_seconds),
+                    self._get_dynamic_std_devs(estimate),
+                )
 
     def set_desired_state(self, desired_state: SubsystemState) -> None:
         if not super().set_desired_state(desired_state):
@@ -81,10 +83,11 @@ class VisionSubsystem(StateSubsystem):
 
         return pose if pose and pose.tag_count > 0 else None
 
+
     @staticmethod
     def _update_camera_orientation(camera: str, pigeon_values: dict):
         """ Updates the camera with the latest robot orientation from the IMU. """
-        LimelightHelpers.set_robot_orientation(
+        LimelightHelpers.set_robot_orientation_no_flush(
             camera,
             pigeon_values["yaw"],
             pigeon_values["ang_vel_z"],
