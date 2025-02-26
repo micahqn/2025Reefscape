@@ -137,7 +137,7 @@ class ElevatorSubsystem(StateSubsystem):
         if position is None:
             self._master_motor.set_control(self._brake_request)
         else:
-            if self._master_motor.get_position().value > position:
+            if self._master_motor.get_position().value < position:
                 self._position_request.acceleration = Constants.ElevatorConstants.MM_UPWARD_ACCELERATION
             else:
                 self._position_request.acceleration = Constants.ElevatorConstants.MM_DOWNWARD_ACCELERATION

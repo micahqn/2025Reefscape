@@ -44,7 +44,7 @@ class Constants:
 
         CRUISE_VELOCITY = 6
         MM_UPWARD_ACCELERATION = 12
-        MM_DOWNWARD_ACCELERATION = 4.03603705806
+        MM_DOWNWARD_ACCELERATION = 4
         EXPO_K_V = 10
         EXPO_K_A = 4
 
