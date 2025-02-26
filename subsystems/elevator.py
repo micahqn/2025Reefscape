@@ -6,7 +6,7 @@ from commands2.sysid import SysIdRoutine
 from phoenix6 import SignalLogger, BaseStatusSignal, utils
 from phoenix6.configs import TalonFXConfiguration, MotorOutputConfigs, FeedbackConfigs, CANdiConfiguration, HardwareLimitSwitchConfigs
 from phoenix6.configs.config_groups import NeutralModeValue, MotionMagicConfigs, InvertedValue
-from phoenix6.controls import Follower, VoltageOut, MotionMagicVoltage
+from phoenix6.controls import Follower, VoltageOut, DynamicMotionMagicVoltage
 from phoenix6.hardware import CANdi, TalonFX
 from phoenix6.signals import ForwardLimitSourceValue
 from wpilib import DriverStation
@@ -91,7 +91,7 @@ class ElevatorSubsystem(StateSubsystem):
         self._candi = CANdi(Constants.CanIDs.ELEVATOR_CANDI)
         self._candi.configurator.apply(self._candi_config)
 
-        self._position_request = MotionMagicVoltage(0)
+        self._position_request = DynamicMotionMagicVoltage(0)
 
         self._brake_request = VoltageOut(0)
         self._sys_id_request = VoltageOut(0)
@@ -133,9 +133,15 @@ class ElevatorSubsystem(StateSubsystem):
             return
 
         position = self._state_configs.get(desired_state, None)
+
         if position is None:
             self._master_motor.set_control(self._brake_request)
         else:
+            if self._master_motor.get_position().value < position:
+                self._position_request.acceleration = Constants.ElevatorConstants.MM_UPWARD_ACCELERATION
+            else:
+                self._position_request.acceleration = Constants.ElevatorConstants.MM_DOWNWARD_ACCELERATION
+
             self._position_request.position = position
             self._master_motor.set_control(self._position_request)
 
