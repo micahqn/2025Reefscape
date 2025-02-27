@@ -21,7 +21,7 @@ class Leviathan(TimedCommandRobot):
         self.container = RobotContainer()
 
         SignalLogger.enable_auto_logging(True)
-        DataLogManager.start()
+        DataLogManager.start(period=0.02)
         DriverStation.startDataLog(DataLogManager.getLog())
 
         WebServer.getInstance().start(5800, self.get_deploy_directory())

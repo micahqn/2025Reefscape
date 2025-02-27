@@ -1,13 +1,10 @@
-import os
-
 import commands2
 import commands2.button
-from commands2 import cmd, InstantCommand
+from commands2 import cmd
 from commands2.sysid import SysIdRoutine
-from ntcore import NetworkTable, NetworkTableInstance
-from pathplannerlib.auto import AutoBuilder, NamedCommands, PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder, NamedCommands
 from phoenix6 import SignalLogger, swerve, utils
-from wpilib import DriverStation, SmartDashboard, DataLogManager, getDeployDirectory, SendableChooser
+from wpilib import DriverStation, SmartDashboard, SendableChooser
 from wpimath.geometry import Rotation2d, Pose2d
 from wpimath.units import rotationsToRadians
 
@@ -163,7 +160,13 @@ class RobotContainer:
         }
 
         for button, goal in goal_bindings.items():
-            button.onTrue(self.superstructure.set_goal_command(goal))
+            if goal is self.superstructure.Goal.L3_ALGAE or goal is self.superstructure.Goal.L2_ALGAE:
+                (button.whileTrue(
+                    self.superstructure.set_goal_command(goal)
+                    .alongWith(self.intake.set_desired_state_command(self.intake.SubsystemState.ALGAE_INTAKE)))
+                 .onFalse(self.intake.set_desired_state_command(self.intake.SubsystemState.HOLD)))
+            else:
+                button.onTrue(self.superstructure.set_goal_command(goal))
 
         self._function_controller.leftBumper().whileTrue(
             cmd.parallel(
