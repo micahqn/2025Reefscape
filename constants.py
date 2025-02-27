@@ -46,8 +46,8 @@ class Constants:
 
         DEFAULT_POSITION = 0
 
-        CRUISE_VELOCITY = 6
-        MM_UPWARD_ACCELERATION = 12
+        CRUISE_VELOCITY = 8
+        MM_UPWARD_ACCELERATION = 18
         MM_DOWNWARD_ACCELERATION = 4
         EXPO_K_V = 10
         EXPO_K_A = 4
