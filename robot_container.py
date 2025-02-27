@@ -123,6 +123,15 @@ class RobotContainer:
             )
         )
 
+        self._driver_controller.rightBumper().whileTrue(
+            self.drivetrain.apply_request(
+                lambda: self._robot_centric
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+            )
+        )
+
         self._driver_controller.a().whileTrue(self.drivetrain.apply_request(lambda: self._brake))
         self._driver_controller.b().whileTrue(
             self.drivetrain.apply_request(
