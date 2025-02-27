@@ -96,9 +96,3 @@ class RobotState(Subsystem):
 
         if self._climber_mechanism:
             self._climber_arm.setAngle(self._climber.get_position() * 360)
-
-    @classmethod
-    def getExpectedAngle(cls):
-        if cls.starting_pose:
-            return cls.starting_pose.rotation()
-        return None
