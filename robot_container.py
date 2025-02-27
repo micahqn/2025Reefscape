@@ -76,6 +76,10 @@ class RobotContainer:
         self._auto_chooser.onChange(
             lambda _: self._set_auto_to_selection()
         )
+        # Add basic leave
+        self._auto_chooser.addOption("Basic Leave",
+            self.drivetrain.apply_request(lambda: self._robot_centric.with_velocity_x(1)).withTimeout(1.0)
+        )
 
         # Add Reset Odometry option
         self._reset_odom = SendableChooser()
