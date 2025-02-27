@@ -45,7 +45,7 @@ class RobotContainer:
             Constants.VisionConstants.BACK_CENTER,
         )
 
-        self.robot_state = RobotState(self.drivetrain, self.pivot, self.elevator)
+        self.robot_state = RobotState(self.drivetrain, self.pivot, self.elevator, self.climber)
         self.superstructure = Superstructure(
             self.drivetrain, self.pivot, self.elevator, self.funnel, self.vision
         )
@@ -90,9 +90,12 @@ class RobotContainer:
 
     def _set_auto_to_selection(self) -> None:
         chooser_selected = self._auto_chooser.getSelected()
-        if chooser_selected is not None:
-            if utils.is_simulation() and DriverStation.isDisabled():
+        if utils.is_simulation() and DriverStation.isDisabled() and chooser_selected is not None:
+            try:
                 self.drivetrain.reset_pose(self._flip_pose_if_needed(chooser_selected._startingPose))
+                self.robot_state.starting_pose = chooser_selected._startingPose
+            except AttributeError:
+                pass
 
     @staticmethod
     def _flip_pose_if_needed(pose: Pose2d) -> Pose2d:
@@ -152,7 +155,11 @@ class RobotContainer:
             self._function_controller.x(): self.superstructure.Goal.L3_CORAL,
             self._function_controller.b(): self.superstructure.Goal.L2_CORAL,
             self._function_controller.a(): self.superstructure.Goal.L1_CORAL,
-            self._function_controller.leftStick(): self.superstructure.Goal.DEFAULT,
+            self._function_controller.y() & self._function_controller.start(): self.superstructure.Goal.NET,
+            self._function_controller.x() & self._function_controller.start(): self.superstructure.Goal.L3_ALGAE,
+            self._function_controller.b() & self._function_controller.start(): self.superstructure.Goal.L2_ALGAE,
+            self._function_controller.a() & self._function_controller.start(): self.superstructure.Goal.PROCESSOR,
+            self._function_controller.leftStick(): self.superstructure.Goal.DEFAULT
         }
 
         for button, goal in goal_bindings.items():
@@ -161,7 +168,7 @@ class RobotContainer:
         self._function_controller.leftBumper().whileTrue(
             cmd.parallel(
                 self.superstructure.set_goal_command(self.superstructure.Goal.FUNNEL),
-                self.intake.set_desired_state_command(self.intake.SubsystemState.CORAL_INTAKE),
+                self.intake.set_desired_state_command(self.intake.SubsystemState.FUNNEL_INTAKE),
             )
         ).onFalse(
             cmd.parallel(
@@ -181,6 +188,14 @@ class RobotContainer:
                 self.intake.set_desired_state_command(self.intake.SubsystemState.HOLD),
             )
         )
+
+        self._function_controller.povLeft().onTrue(
+            self.climber.set_desired_state_command(self.climber.SubsystemState.CLIMB_NEGATIVE)
+        ).onFalse(self.climber.set_desired_state_command(self.climber.SubsystemState.STOP))
+
+        self._function_controller.povRight().onTrue(
+            self.climber.set_desired_state_command(self.climber.SubsystemState.CLIMB_POSITIVE)
+        ).onFalse(self.climber.set_desired_state_command(self.climber.SubsystemState.STOP))
 
         self._function_controller.rightBumper().whileTrue(
             self.intake.set_desired_state_command(self.intake.SubsystemState.CORAL_OUTPUT)
