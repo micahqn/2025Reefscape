@@ -1,7 +1,7 @@
 import os.path
 
 from commands2 import CommandScheduler, TimedCommandRobot
-from phoenix6 import utils, SignalLogger
+from phoenix6 import SignalLogger
 from wpilib import DataLogManager, DriverStation, SmartDashboard, Timer, RobotController
 from wpinet import WebServer, PortForwarder
 
@@ -9,7 +9,6 @@ from constants import Constants
 from lib import elasticlib
 from lib.elasticlib import Notification, NotificationLevel
 from robot_container import RobotContainer
-from subsystems.vision import VisionSubsystem
 
 
 class Leviathan(TimedCommandRobot):
@@ -44,16 +43,11 @@ class Leviathan(TimedCommandRobot):
         SmartDashboard.putNumber("Match Time", Timer.getMatchTime())
         SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage())
 
-        if utils.is_simulation():
-            self.container.robot_state.update_mechanisms()
-
     def _simulationPeriodic(self) -> None:
         pass
 
     def autonomousInit(self) -> None:
         DataLogManager.log("Autonomous period started")
-        self.container.drivetrain.pigeon2.set_yaw(self.container.drivetrain.get_state().pose.rotation().degrees())
-        self.container.vision.set_desired_state(VisionSubsystem.SubsystemState.MEGA_TAG_2)
 
         selected_auto = self.container.get_autonomous_command()
         if selected_auto is not None:
@@ -71,8 +65,6 @@ class Leviathan(TimedCommandRobot):
             
     def teleopInit(self) -> None:
         DataLogManager.log("Teleoperated period started")
-        self.container.drivetrain.pigeon2.set_yaw(self.container.drivetrain.get_state().pose.rotation().degrees())
-        self.container.vision.set_desired_state(VisionSubsystem.SubsystemState.MEGA_TAG_2)
 
     def teleopExit(self) -> None:
         DataLogManager.log("Teleoperated period ended")
@@ -91,7 +83,6 @@ class Leviathan(TimedCommandRobot):
         elasticlib.select_tab("Debug")
 
     def disabledInit(self):
-        self.container.vision.set_desired_state(VisionSubsystem.SubsystemState.MEGA_TAG_1)
         SignalLogger.stop()
 
     def testExit(self):

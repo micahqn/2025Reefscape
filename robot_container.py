@@ -3,8 +3,8 @@ import commands2.button
 from commands2 import cmd
 from commands2.sysid import SysIdRoutine
 from pathplannerlib.auto import AutoBuilder, NamedCommands
-from phoenix6 import SignalLogger, swerve, utils
-from wpilib import DriverStation, SmartDashboard, SendableChooser
+from phoenix6 import SignalLogger, swerve
+from wpilib import DriverStation, SmartDashboard
 from wpimath.geometry import Rotation2d, Pose2d
 from wpimath.units import rotationsToRadians
 
@@ -74,25 +74,21 @@ class RobotContainer:
         # Build AutoChooser
         self._auto_chooser = AutoBuilder.buildAutoChooser()
         self._auto_chooser.onChange(
-            lambda _: self._set_auto_to_selection()
+            lambda _: self._set_correct_swerve_position()
         )
-
-        # Add Reset Odometry option
-        self._reset_odom = SendableChooser()
-        self._reset_odom.setDefaultOption("No", False)
-        self._reset_odom.addOption("Yes", True)
-
+        # Add basic leave
+        self._auto_chooser.addOption("Basic Leave",
+            self.drivetrain.apply_request(lambda: self._robot_centric.with_velocity_x(1)).withTimeout(1.0)
+        )
         SmartDashboard.putData("Selected Auto", self._auto_chooser)
-        SmartDashboard.putData("Reset Odometry?", self._reset_odom)
 
-    def _set_auto_to_selection(self) -> None:
+    def _set_correct_swerve_position(self) -> None:
         chooser_selected = self._auto_chooser.getSelected()
-        if utils.is_simulation() and DriverStation.isDisabled() and chooser_selected is not None:
-            try:
-                self.drivetrain.reset_pose(self._flip_pose_if_needed(chooser_selected._startingPose))
-                self.robot_state.starting_pose = chooser_selected._startingPose
-            except AttributeError:
-                pass
+        try:
+            self.drivetrain.reset_pose(self._flip_pose_if_needed(chooser_selected._startingPose))
+            self.drivetrain.reset_rotation(chooser_selected._startingPose.rotation() + self.drivetrain.get_operator_forward_direction())
+        except AttributeError:
+            pass
 
     @staticmethod
     def _flip_pose_if_needed(pose: Pose2d) -> Pose2d:
@@ -117,6 +113,15 @@ class RobotContainer:
         self.drivetrain.setDefaultCommand(
             self.drivetrain.apply_request(
                 lambda: self._field_centric
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+            )
+        )
+
+        self._driver_controller.rightBumper().whileTrue(
+            self.drivetrain.apply_request(
+                lambda: self._robot_centric
                 .with_velocity_x(-hid.getLeftY() * self._max_speed)
                 .with_velocity_y(-hid.getLeftX() * self._max_speed)
                 .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
@@ -160,7 +165,7 @@ class RobotContainer:
         }
 
         for button, goal in goal_bindings.items():
-            if goal is self.superstructure.Goal.L3_ALGAE or goal is self.superstructure.Goal.L2_ALGAE:
+            if goal is self.superstructure.Goal.L3_ALGAE or goal is self.superstructure.Goal.L2_ALGAE or goal is self.superstructure.Goal.PROCESSOR:
                 (button.whileTrue(
                     self.superstructure.set_goal_command(goal)
                     .alongWith(self.intake.set_desired_state_command(self.intake.SubsystemState.ALGAE_INTAKE)))
@@ -221,7 +226,4 @@ class RobotContainer:
         controller.back().and_(reverse_btn).onTrue(commands2.InstantCommand(lambda: SignalLogger.start())).whileTrue(reverse_quasistatic.onlyIf(lambda: not DriverStation.isFMSAttached() and DriverStation.isTest()))
 
     def get_autonomous_command(self) -> commands2.Command:
-        # Ignores pose estimates when reset odometry is selected
-        if self._reset_odom.getSelected():
-            self.vision.set_desired_state_command(VisionSubsystem.SubsystemState.DISABLE_ESTIMATES)
         return self._auto_chooser.getSelected()
