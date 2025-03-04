@@ -85,8 +85,9 @@ class Superstructure(Subsystem):
         pivot_state = self.pivot.get_current_state()
         elevator_state = self.elevator.get_current_state()
 
-        # Only proceed with actions when necessary
-        if pivot_state != self._pivot_old_state and not self.elevator.is_at_setpoint():
+        # Only proceed with actions when necessary. Are the subsystems moving? And is the pivot inside the elevator or will be inside?
+        if (pivot_state != self._pivot_old_state and not self.elevator.is_at_setpoint()) and (self.pivot.is_in_elevator() or self.pivot.is_in_elevator(self.pivot._state_configs[pivot_state])): 
+
             # Wait for Pivot to leave elevator
             self.pivot.set_desired_state(PivotSubsystem.SubsystemState.AVOID_ELEVATOR)
             self.pivot.freeze()

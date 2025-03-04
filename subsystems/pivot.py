@@ -152,8 +152,10 @@ class PivotSubsystem(StateSubsystem):
     def is_at_setpoint(self) -> bool:
         return self._at_setpoint
 
-    def is_in_elevator(self) -> bool:
-        return self._master_motor.get_position(True).value >= Constants.PivotConstants.INSIDE_ELEVATOR_ANGLE
+    def is_in_elevator(self, position=None) -> bool:
+        if not position:
+            position = self._master_motor.get_position(True).value
+        return position >= Constants.PivotConstants.INSIDE_ELEVATOR_ANGLE
 
     def stop(self) -> Command:
         return self.runOnce(lambda: self._master_motor.set_control(self._sys_id_request.with_output(0)))
