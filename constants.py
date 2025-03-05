@@ -5,7 +5,7 @@ from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
 
 class Constants:
 
-    apriltag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025Reefscape)
+    apriltag_layout = AprilTagFieldLayout.loadField(AprilTagField.k2025ReefscapeWelded)
 
     class CanIDs:
         LEFT_ELEVATOR_TALON = 10
@@ -50,7 +50,8 @@ class Constants:
         DEFAULT_POSITION = 0
 
         CRUISE_VELOCITY = 8
-        MM_UPWARD_ACCELERATION = 24
+        MM_UPWARD_ACCELERATION = 48
+        MM_BRAKE_ACCELERATION = 24
         MM_DOWNWARD_ACCELERATION = 12
         EXPO_K_V = 10
         EXPO_K_A = 4
