@@ -198,6 +198,8 @@ class RobotContainer:
             cmd.parallel(
                 self.superstructure.set_goal_command(self.superstructure.Goal.DEFAULT),
                 self.intake.set_desired_state_command(self.intake.SubsystemState.HOLD),
+                self.rumble_command(self._driver_controller, 0, 0.25),
+                self.rumble_command(self._function_controller, 0, 0.25),
             )
         )
 
