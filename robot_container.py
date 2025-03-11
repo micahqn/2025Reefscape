@@ -95,8 +95,8 @@ class RobotContainer:
     @staticmethod
     def _flip_pose_if_needed(pose: Pose2d) -> Pose2d:
         if (DriverStation.getAlliance() or DriverStation.Alliance.kBlue) == DriverStation.Alliance.kRed:
-            flipped_x = Constants.apriltag_layout.getFieldLength() - pose.X()
-            flipped_y = Constants.apriltag_layout.getFieldWidth() - pose.Y()
+            flipped_x = Constants.FIELD_LAYOUT.getFieldLength() - pose.X()
+            flipped_y = Constants.FIELD_LAYOUT.getFieldWidth() - pose.Y()
             flipped_rotation = Rotation2d(pose.rotation().radians()) + Rotation2d.fromDegrees(180)
             return Pose2d(flipped_x, flipped_y, flipped_rotation)
         return pose
