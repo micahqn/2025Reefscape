@@ -14,6 +14,7 @@ from wpimath.units import rotationsToRadians
 
 from constants import Constants
 from generated.tuner_constants import TunerConstants
+from subsystems.auto_align import DriverAssist
 from subsystems.elevator import ElevatorSubsystem
 from subsystems.funnel import FunnelSubsystem
 from subsystems.intake import IntakeSubsystem
@@ -112,8 +113,17 @@ class RobotContainer:
         common_settings: Callable[[swerve.requests.SwerveRequest], swerve.requests.SwerveRequest] = lambda req: req.with_deadband(self._max_speed * 0.01).with_rotational_deadband(self._max_angular_rate * 0.01).with_drive_request_type(
             swerve.SwerveModule.DriveRequestType.VELOCITY
         ).with_steer_request_type(swerve.SwerveModule.SteerRequestType.MOTION_MAGIC_EXPO)
-        self._field_centric = common_settings(swerve.requests.FieldCentric())
-        self._robot_centric = common_settings(swerve.requests.RobotCentric())
+        self._field_centric: swerve.requests.FieldCentric = common_settings(swerve.requests.FieldCentric())
+        self._robot_centric: swerve.requests.RobotCentric = common_settings(swerve.requests.RobotCentric())
+
+        self._driver_assist: DriverAssist = common_settings(
+            DriverAssist()
+            .with_translation_pid(Constants.AutoAlignConstants.TRANSLATION_P, Constants.AutoAlignConstants.TRANSLATION_I, Constants.AutoAlignConstants.TRANSLATION_D)
+            .with_heading_pid(Constants.AutoAlignConstants.HEADING_P, Constants.AutoAlignConstants.HEADING_I, Constants.AutoAlignConstants.HEADING_D)
+            .with_max_distance(Constants.AutoAlignConstants.MAX_DISTANCE)
+            .with_elevator_up_function(lambda: not self.elevator.get_current_state() == self.elevator.SubsystemState.DEFAULT)
+            )
+        
         self._brake = swerve.requests.SwerveDriveBrake()
         self._point = swerve.requests.PointWheelsAt()
 
@@ -136,7 +146,8 @@ class RobotContainer:
             )
         )
 
-        self._driver_controller.rightBumper().whileTrue(
+        
+        self._driver_controller.leftBumper().whileTrue(
             self.drivetrain.apply_request(
                 lambda: self._robot_centric
                 .with_velocity_x(-hid.getLeftY() * self._max_speed)
@@ -145,7 +156,7 @@ class RobotContainer:
             )
         )
 
-        Trigger(lambda: self._driver_controller.getRightTriggerAxis() > 0.75).whileTrue(
+        self._driver_controller.rightBumper().whileTrue(
             self.intake.set_desired_state_command(self.intake.SubsystemState.CORAL_OUTPUT)
         ).onFalse(
             self.intake.set_desired_state_command(self.intake.SubsystemState.HOLD)
@@ -157,8 +168,56 @@ class RobotContainer:
                 lambda: self._point.with_module_direction(Rotation2d(-hid.getLeftY(), -hid.getLeftX()))
             )
         )
+        
 
-        self._driver_controller.leftBumper().onTrue(self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric()))
+        Trigger(lambda: self._driver_controller.getLeftTriggerAxis() > 0.75).whileTrue(
+            self.drivetrain.apply_request_once(
+                lambda: self._driver_assist
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+                .with_fallback(self._field_centric)
+                .with_change_target_pose(True)
+                .with_branch_side(DriverAssist.BranchSide.LEFT)
+            )
+            .andThen(
+                self.drivetrain.apply_request(
+                lambda: self._driver_assist
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+                .with_fallback(self._field_centric)
+                .with_change_target_pose(False)
+                .with_branch_side(DriverAssist.BranchSide.LEFT)
+            )
+            )
+        )
+
+        Trigger(lambda: self._driver_controller.getRightTriggerAxis() > 0.75).whileTrue(
+            # eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+            self.drivetrain.apply_request_once(
+                lambda: self._driver_assist
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+                .with_fallback(self._field_centric)
+                .with_change_target_pose(True)
+                .with_branch_side(DriverAssist.BranchSide.RIGHT)
+            )
+            .andThen(
+                self.drivetrain.apply_request(
+                lambda: self._driver_assist
+                .with_velocity_x(-hid.getLeftY() * self._max_speed)
+                .with_velocity_y(-hid.getLeftX() * self._max_speed)
+                .with_rotational_rate(-self._driver_controller.getRightX() * self._max_angular_rate)
+                .with_fallback(self._field_centric)
+                .with_change_target_pose(False)
+                .with_branch_side(DriverAssist.BranchSide.LEFT)
+            )
+            )
+        )
+
+        self._driver_controller.start().onTrue(self.drivetrain.runOnce(lambda: self.drivetrain.seed_field_centric()))
 
         self._setup_sysid_bindings(
             self._driver_controller, self.drivetrain,
