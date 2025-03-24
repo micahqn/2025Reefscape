@@ -4,7 +4,6 @@ from phoenix6.configs import CurrentLimitsConfigs, TalonFXConfiguration, MotionM
 from phoenix6.controls import VoltageOut, MotionMagicVoltage
 from phoenix6.hardware import TalonFX
 from phoenix6.signals import InvertedValue, NeutralModeValue
-from wpilib import DriverStation
 from wpimath.system.plant import DCMotor
 
 from constants import Constants
@@ -36,10 +35,10 @@ class FunnelSubsystem(StateSubsystem):
     _funnel_config.with_motion_magic(MotionMagicConfigs().with_motion_magic_cruise_velocity(Constants.FunnelConstants.CRUISE_VELOCITY).with_motion_magic_acceleration(Constants.FunnelConstants.MM_ACCELERATION))
     _funnel_config.with_current_limits(CurrentLimitsConfigs()
                                        .with_supply_current_limit_enable(True)
-                                       .with_supply_current_limit(Constants.FunnelConstants.SUPPLY_LIMIT)
+                                       .with_supply_current_limit(Constants.FunnelConstants.SUPPLY_CURRENT)
                                        .with_supply_current_lower_time(0)
                                        .with_stator_current_limit_enable(True)
-                                       .with_stator_current_limit(Constants.FunnelConstants.STATOR_LIMIT)
+                                       .with_stator_current_limit(Constants.FunnelConstants.STATOR_CURRENT)
                                        )
 
     def __init__(self) -> None:
