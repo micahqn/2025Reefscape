@@ -42,6 +42,7 @@ class RobotContainer:
             Constants.VisionConstants.FRONT_RIGHT,
             Constants.VisionConstants.FRONT_CENTER,
             Constants.VisionConstants.FRONT_LEFT,
+            Constants.VisionConstants.BACK_CENTER,
         )
 
         self.superstructure = Superstructure(
