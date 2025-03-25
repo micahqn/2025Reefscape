@@ -114,7 +114,7 @@ class VisionSubsystem(StateSubsystem):
     @staticmethod
     def _is_better_estimate(new_estimate: PoseEstimate, current_best: PoseEstimate) -> bool:
         if not current_best:
-            return new_estimate.avg_tag_dist < 2.5
+            return new_estimate.avg_tag_dist < 4.125
         return new_estimate.avg_tag_dist < current_best.avg_tag_dist
 
     @staticmethod
