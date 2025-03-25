@@ -30,7 +30,6 @@ class Leviathan(TimedCommandRobot):
         port_forwarder = PortForwarder.getInstance()
         for i in range(10): # Forward limelight ports for use when tethered at events.
             port_forwarder.add(5800 + i, f"{Constants.VisionConstants.FRONT_CENTER}.local", 5800 + i)
-            port_forwarder.add(5800 + i + 10, f"{Constants.VisionConstants.BACK_CENTER}.local", 5800 + i)
 
         DataLogManager.log("Robot initialized")
 
