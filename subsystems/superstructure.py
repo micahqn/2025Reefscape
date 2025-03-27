@@ -134,7 +134,7 @@ class Superstructure(Subsystem):
         self._goal = goal
 
         pivot_state, elevator_state, funnel_state, vision_state = self._goal_to_states.get(goal, (None, None, None, None))
-        safety_checks = self._should_enable_safety_checks(pivot_state)
+        safety_checks = self._should_enable_safety_checks(pivot_state, elevator_state)
         if pivot_state:
             self._desired_pivot_state = pivot_state
             if safety_checks:
@@ -156,8 +156,10 @@ class Superstructure(Subsystem):
 
         self._current_goal_pub.set(goal.name)
 
-    def _should_enable_safety_checks(self, pivot_state: PivotSubsystem.SubsystemState) -> bool:
+    def _should_enable_safety_checks(self, pivot_state: PivotSubsystem.SubsystemState, elevator_state: ElevatorSubsystem.SubsystemState) -> bool:
         """Safety checks are always activated, unless we're already outside the elevator and the new state is also outside the elevator."""
+        if elevator_state == self.elevator.get_current_state():
+            return False
         return not (
                 self.pivot.get_current_state().value < Constants.PivotConstants.INSIDE_ELEVATOR_ANGLE
                 and pivot_state.value < Constants.PivotConstants.INSIDE_ELEVATOR_ANGLE
