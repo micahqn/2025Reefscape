@@ -112,7 +112,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "Oil Spill",
+                      "model": "Leviathan",
                       "color": "#00ff00"
                     }
                   },
@@ -122,7 +122,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "Oil Spill",
+                      "model": "Leviathan",
                       "color": "#ff00ff"
                     }
                   },
@@ -141,7 +141,7 @@
                     "logType": "Pose2d[]",
                     "visible": true,
                     "options": {
-                      "model": "Oil Spill",
+                      "model": "Leviathan",
                       "color": "#ffff00"
                     }
                   },
@@ -170,7 +170,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "Oil Spill",
+                      "model": "Leviathan",
                       "color": "#00ffff"
                     }
                   }
