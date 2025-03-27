@@ -72,6 +72,7 @@ class PivotSubsystem(StateSubsystem):
 
         self._add_talon_sim_model(self._pivot_motor, DCMotor.krakenX60FOC(1), Constants.PivotConstants.GEAR_RATIO, 0.0807378172)
 
+
         self._at_setpoint_debounce = Debouncer(0.1, Debouncer.DebounceType.kRising)
         self._at_setpoint = True
 
@@ -93,7 +94,9 @@ class PivotSubsystem(StateSubsystem):
             )
         )
 
+
         self._pivot_motor.set_position(self._encoder.get_position().value)
+
 
     def periodic(self):
         super().periodic()
