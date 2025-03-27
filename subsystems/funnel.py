@@ -66,4 +66,4 @@ class FunnelSubsystem(StateSubsystem):
         self._funnel_motor.set_control(self._position_request)
 
     def get_component_pose(self) -> Pose3d:
-        return Pose3d(Translation3d(-0.311150, 0, 0.703243), Rotation3d(0, -rotationsToRadians(self._funnel_motor.get_position().value), 0))
+        return Pose3d(Translation3d(-0.311150, 0, 0.703243), Rotation3d(0, -rotationsToRadians(self._funnel_motor.get_position().value) * 2, 0))
