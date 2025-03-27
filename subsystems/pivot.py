@@ -64,13 +64,13 @@ class PivotSubsystem(StateSubsystem):
         super().__init__("Pivot", self.SubsystemState.STOW)
 
         self._encoder = CANcoder(Constants.CanIDs.PIVOT_CANCODER)
-        self._pivot_motor = TalonFX(Constants.CanIDs.PIVOT_TALON)
+        self._pivot_motor = TalonFX(Constants.CanIDs.LEFT_PIVOT_TALON)
         self._pivot_motor.sim_state.orientation = ChassisReference.Clockwise_Positive
 
         self._encoder.configurator.apply(self._encoder_config)
         self._pivot_motor.configurator.apply(self._motor_config)
 
-        self._add_talon_sim_model(self._motor_config, DCMotor.krakenX60FOC(1), Constants.PivotConstants.GEAR_RATIO, 0.0807378172)
+        self._add_talon_sim_model(self._pivot_motor, DCMotor.krakenX60FOC(1), Constants.PivotConstants.GEAR_RATIO, 0.0807378172)
 
         self._at_setpoint_debounce = Debouncer(0.1, Debouncer.DebounceType.kRising)
         self._at_setpoint = True
