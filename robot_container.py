@@ -46,7 +46,7 @@ class RobotContainer:
         )
 
         self.superstructure = Superstructure(
-            self.drivetrain, self.pivot, self.elevator, self.funnel, self.vision
+            self.drivetrain, self.pivot, self.elevator, self.funnel, self.vision, self.intake
         )
 
         self._setup_swerve_requests()

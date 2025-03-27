@@ -4,12 +4,14 @@ from typing import Optional
 from commands2 import Command, Subsystem, cmd
 from ntcore import NetworkTableInstance
 from phoenix6 import utils
-from wpilib import DriverStation, Mechanism2d, Color8Bit, SmartDashboard
-from wpimath.geometry import Pose3d
+from wpilib import DriverStation, Mechanism2d, Color8Bit, SmartDashboard, Timer
+from wpimath.geometry import Pose3d, Rotation3d, Transform3d
+from wpimath.units import degreesToRadians
 
 from constants import Constants
 from subsystems.elevator import ElevatorSubsystem
 from subsystems.funnel import FunnelSubsystem
+from subsystems.intake import IntakeSubsystem
 from subsystems.pivot import PivotSubsystem
 from subsystems.swerve import SwerveSubsystem
 from subsystems.vision import VisionSubsystem
@@ -57,7 +59,7 @@ class Superstructure(Subsystem):
         Goal.CLIMBING: (PivotSubsystem.SubsystemState.AVOID_CLIMBER, ElevatorSubsystem.SubsystemState.DEFAULT, FunnelSubsystem.SubsystemState.DOWN, VisionSubsystem.SubsystemState.NO_ESTIMATES)
     }
 
-    def __init__(self, drivetrain: SwerveSubsystem, pivot: PivotSubsystem, elevator: ElevatorSubsystem, funnel: FunnelSubsystem, vision: VisionSubsystem) -> None:
+    def __init__(self, drivetrain: SwerveSubsystem, pivot: PivotSubsystem, elevator: ElevatorSubsystem, funnel: FunnelSubsystem, vision: VisionSubsystem, intake: IntakeSubsystem) -> None:
         """
         Constructs the superstructure using instance of each subsystem.
 
@@ -78,6 +80,7 @@ class Superstructure(Subsystem):
         self.elevator = elevator
         self.funnel = funnel
         self.vision = vision
+        self.intake = intake
 
         self._goal = self.Goal.DEFAULT
         self.set_goal_command(self._goal)
@@ -86,6 +89,7 @@ class Superstructure(Subsystem):
         self._current_goal_pub = table.getStringTopic("Current Goal").publish()
         self._component_poses = table.getStructArrayTopic("Components", Pose3d).publish()
         self._component_targets = table.getStructArrayTopic("Component Targets", Pose3d).publish()
+        self._coral = table.getStructArrayTopic("Known Coral", Pose3d).publish()
 
         if utils.is_simulation():
             self._superstructure_mechanism = Mechanism2d(1, 5, Color8Bit(0, 0, 105))
@@ -110,11 +114,12 @@ class Superstructure(Subsystem):
             self.pivot.set_desired_state(self._desired_pivot_state)
 
         first_stage_pose, carriage_pose = self.elevator.get_component_poses()
+        pivot_pose = self.pivot.get_component_pose(carriage_pose)
         self._component_poses.set([
-            self.funnel.get_component_pose(), # Funnel
-            first_stage_pose, # Elevator 1st Stage
-            carriage_pose, # Carriage
-            self.pivot.get_component_pose(carriage_pose) # GPM
+            self.funnel.get_component_pose(),
+            first_stage_pose,
+            carriage_pose,
+            pivot_pose
         ])
 
         first_stage_pose, carriage_pose = self.elevator.get_target_poses()
@@ -124,6 +129,16 @@ class Superstructure(Subsystem):
             carriage_pose,
             self.pivot.get_component_pose(carriage_pose)
         ])
+
+        known_coral = []
+        if self.intake.has_coral() or utils.is_simulation():
+            intake_coral_pose = (Pose3d(self.drivetrain.get_state().pose)
+                                 .transformBy(Transform3d(Pose3d(), pivot_pose))
+                                 .transformBy(Transform3d(0.214048*1.75, 0.0, 0, Rotation3d(0, -degreesToRadians(36), 0))))
+            known_coral.append(intake_coral_pose)
+
+        self._coral.set(known_coral)
+
 
 
     def simulationPeriodic(self) -> None:
