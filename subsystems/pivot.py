@@ -153,4 +153,4 @@ class PivotSubsystem(StateSubsystem):
         return self._master_motor.get_position().value
 
     def get_component_pose(self, carriage_pose: Pose3d) -> Pose3d:
-        return Pose3d(Translation3d(0.323850, 0, carriage_pose.z+0.266700), Rotation3d(0, -rotationsToRadians(self._master_motor.get_position().value), 0))
+        return Pose3d(Translation3d(0.323850, 0, carriage_pose.z + 0.266700), Rotation3d(0, -rotationsToRadians(self._master_motor.get_position().value), 0))
