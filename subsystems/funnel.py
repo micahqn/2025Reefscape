@@ -67,3 +67,7 @@ class FunnelSubsystem(StateSubsystem):
 
     def get_component_pose(self) -> Pose3d:
         return Pose3d(Translation3d(-0.311150, 0, 0.703243), Rotation3d(0, -rotationsToRadians(self._funnel_motor.get_position().value) * 2, 0))
+
+    def get_target_pose(self) -> Pose3d:
+        """Works the same as self.get_component_pose, but instead with the PIDReference rather than current position."""
+        return Pose3d(Translation3d(-0.311150, 0, 0.703243), Rotation3d(0, -rotationsToRadians(self._funnel_motor.get_closed_loop_reference().value) * 2, 0))

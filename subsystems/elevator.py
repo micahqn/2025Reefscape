@@ -164,8 +164,14 @@ class ElevatorSubsystem(StateSubsystem):
 
     def get_component_poses(self) -> tuple[Pose3d, Pose3d]:
         position = self._master_motor.get_position().value
-
         return (
             Pose3d(0, 0, (position * (0.6985 / 6.096924)), Rotation3d()),
             Pose3d(0, 0, (position * 2 * (0.6985 / 6.096924)), Rotation3d())
+        )
+
+    def get_target_poses(self) -> tuple[Pose3d, Pose3d]:
+        reference = self._master_motor.get_closed_loop_reference().value
+        return (
+            Pose3d(0, 0, (reference * (0.6985 / 6.096924)), Rotation3d()),
+            Pose3d(0, 0, (reference * 2 * (0.6985 / 6.096924)), Rotation3d())
         )

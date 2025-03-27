@@ -85,6 +85,7 @@ class Superstructure(Subsystem):
         table = NetworkTableInstance.getDefault().getTable("Superstructure")
         self._current_goal_pub = table.getStringTopic("Current Goal").publish()
         self._component_poses = table.getStructArrayTopic("Components", Pose3d).publish()
+        self._component_targets = table.getStructArrayTopic("Component Targets", Pose3d).publish()
 
         if utils.is_simulation():
             self._superstructure_mechanism = Mechanism2d(1, 5, Color8Bit(0, 0, 105))
@@ -115,6 +116,15 @@ class Superstructure(Subsystem):
             carriage_pose, # Carriage
             self.pivot.get_component_pose(carriage_pose) # GPM
         ])
+
+        first_stage_pose, carriage_pose = self.elevator.get_target_poses()
+        self._component_targets.set([
+            self.funnel.get_target_pose(),
+            first_stage_pose,
+            carriage_pose,
+            self.pivot.get_component_pose(carriage_pose)
+        ])
+
 
     def simulationPeriodic(self) -> None:
         self._elevator_mech.setLength(self.elevator.get_height())
