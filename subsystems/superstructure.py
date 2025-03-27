@@ -5,6 +5,7 @@ from commands2 import Command, Subsystem, cmd
 from ntcore import NetworkTableInstance
 from phoenix6 import utils
 from wpilib import DriverStation, Mechanism2d, Color8Bit, SmartDashboard
+from wpimath.geometry import Pose3d
 
 from constants import Constants
 from subsystems.elevator import ElevatorSubsystem
@@ -83,6 +84,7 @@ class Superstructure(Subsystem):
 
         table = NetworkTableInstance.getDefault().getTable("Superstructure")
         self._current_goal_pub = table.getStringTopic("Current Goal").publish()
+        self._component_poses = table.getStructArrayTopic("Components", Pose3d).publish()
 
         if utils.is_simulation():
             self._superstructure_mechanism = Mechanism2d(1, 5, Color8Bit(0, 0, 105))
@@ -105,6 +107,14 @@ class Superstructure(Subsystem):
                 self.elevator.is_at_setpoint() or self._desired_pivot_state.value < Constants.PivotConstants.INSIDE_ELEVATOR_ANGLE):
             self.pivot.unfreeze()
             self.pivot.set_desired_state(self._desired_pivot_state)
+
+        first_stage_pose, carriage_pose = self.elevator.get_component_poses()
+        self._component_poses.set([
+            self.funnel.get_component_pose(), # Funnel
+            first_stage_pose, # Elevator 1st Stage
+            carriage_pose, # Carriage
+            self.pivot.get_component_pose(carriage_pose) # GPM
+        ])
 
     def simulationPeriodic(self) -> None:
         self._elevator_mech.setLength(self.elevator.get_height())

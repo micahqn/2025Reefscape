@@ -7,7 +7,7 @@
       "height": 1034,
       "state": {
         "sidebar": {
-          "width": 500,
+          "width": 441,
           "expanded": [
             "/PathPlanner/currentPose/rotation",
             "/Drive",
@@ -18,7 +18,6 @@
             "/NT",
             "/NT/limelight",
             "/NT/limelight/robot_orientation_set",
-            "/Elevator",
             "/Climber",
             "/Log0",
             "/Log0/NT",
@@ -41,9 +40,7 @@
             "/limelight-back/fiducial_id_filters_set",
             "/Telemetry/current_pose",
             "/Telemetry/current_pose/translation",
-            "/Vision",
             "/NT/CameraPublisher/USB Camera 0",
-            "/PathPlanner",
             "/NT/LiveWindow/.status",
             "/NT/Elevator",
             "/NT/Vision",
@@ -51,11 +48,14 @@
             "/NT/Superstructure",
             "/NT/SmartDashboard",
             "/NT/Shuffleboard",
-            "/NT/Pivot"
+            "/NT/Pivot",
+            "/Superstructure/Components/0",
+            "/Superstructure/Components/0/rotation",
+            "/Superstructure/Components/0/rotation/q"
           ]
         },
         "tabs": {
-          "selected": 2,
+          "selected": 1,
           "tabs": [
             {
               "type": 0,
@@ -76,7 +76,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "Oil Spill"
+                      "model": "Leviathan"
                     }
                   },
                   {
@@ -98,6 +98,13 @@
                       "color": "#0000ff",
                       "arrangement": "0,1,2,3"
                     }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/Superstructure/Components",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
                   },
                   {
                     "type": "ghost",
@@ -176,14 +183,14 @@
                 "cameraIndex": -1,
                 "orbitFov": 90,
                 "cameraPosition": [
-                  -2.2200975144275037,
-                  2.38228329637397,
-                  2.8763793200252437
+                  -9.060538006630637,
+                  2.9914329169196705,
+                  -1.0568436106748547
                 ],
                 "cameraTarget": [
-                  -2.845409369094013,
-                  0.7503815954337896,
-                  1.7952193305315167
+                  -4.594084338658479,
+                  0.5,
+                  -1.077434446235164
                 ]
               },
               "controlsHeight": 200
