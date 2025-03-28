@@ -11,7 +11,9 @@ from phoenix6.sim import ChassisReference
 from wpilib import RobotBase, RobotController
 from wpilib.sysid import SysIdRoutineLog
 from wpimath.filter import Debouncer
+from wpimath.geometry import Pose3d, Translation3d, Rotation3d
 from wpimath.system.plant import DCMotor
+from wpimath.units import rotationsToRadians
 
 from constants import Constants
 from subsystems import StateSubsystem
@@ -151,4 +153,11 @@ class PivotSubsystem(StateSubsystem):
 
     def get_position(self) -> float:
         """Returns the current angle of the pivot, in degrees."""
-        return self._pivot_motor.get_position().value
+
+        return self._encoder.get_position().value
+
+    def get_component_pose(self, carriage_pose: Pose3d) -> Pose3d:
+        return Pose3d(Translation3d(0.323850, 0, carriage_pose.z + 0.266700), Rotation3d(0, -rotationsToRadians(self._encoder.get_position().value), 0))
+
+    def get_target_pose(self, carriage_pose: Pose3d) -> Pose3d:
+        return Pose3d(Translation3d(0.323850, 0, carriage_pose.z + 0.266700), Rotation3d(0, -rotationsToRadians(self._master_motor.get_closed_loop_reference().value), 0))

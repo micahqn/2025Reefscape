@@ -1,6 +1,7 @@
 from phoenix6.configs.config_groups import Slot0Configs
 from phoenix6.signals import GravityTypeValue
 from robotpy_apriltag import AprilTagField, AprilTagFieldLayout
+from wpilib import RobotBase
 
 
 class Constants:
@@ -12,6 +13,7 @@ class Constants:
         RIGHT_ELEVATOR_TALON = 11
         INTAKE_TALON = 12
         LEFT_PIVOT_TALON = 13
+        CLIMB_TALON = 15
         FUNNEL_TALON = 22
 
         ELEVATOR_CANDI = 20
@@ -20,7 +22,7 @@ class Constants:
         INTAKE_CANRANGE = 23
 
     class ClimberConstants:
-        GEAR_RATIO = 61504/189
+        GEAR_RATIO = 48
         GAINS = (Slot0Configs()
             .with_k_p(1.0)
             .with_k_i(0.0)
@@ -31,7 +33,10 @@ class Constants:
         )
 
         VOLTAGE_INWARDS = 16
-        VOLTAGE_OUTWARDS = -4
+        VOLTAGE_OUTWARDS = -5
+        CLIMB_IN_VOLTAGE = 5
+
+        CLIMB_FULL_THRESHOLD = 0.44
 
         SERVO_PORT = 0
         SERVO_ENGAGED_ANGLE = 0
@@ -77,7 +82,7 @@ class Constants:
         ELEVATOR_PRIORITY_ANGLE = 0.123535 # We move the pivot to this position until the elevator has reached its setpoint.
         STOW_ANGLE = 0.188
         GROUND_INTAKE_ANGLE = -0.081543
-        FUNNEL_INTAKE_ANGLE = 0.286
+        FUNNEL_INTAKE_ANGLE = 0.333
         ALGAE_INTAKE_ANGLE = -0.05
         HIGH_SCORING_ANGLE =  0.21
         MID_SCORING_ANGLE = 0.22
@@ -95,7 +100,7 @@ class Constants:
         GEAR_RATIO = 961/36
         GAINS = (Slot0Configs()
                  .with_k_g(0.27)
-                 .with_k_p(30)
+                 .with_k_p(30 if RobotBase.isReal() else 60)
                  .with_k_i(0.0)
                  .with_k_d(0.6343)
                  .with_k_s(0.19)
@@ -140,10 +145,10 @@ class Constants:
 
     class FunnelConstants:
 
-        CORAL_STATION_POSITION = 0.105
+        CORAL_STATION_POSITION = 0.24
         STOWED_POSITION = 0
 
-        GEAR_RATIO = 192/7
+        GEAR_RATIO = 12
 
         CRUISE_VELOCITY = 1 
 
